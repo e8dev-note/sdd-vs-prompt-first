@@ -3,6 +3,7 @@ import { BookmarkFilterToggle } from "@/components/bookmark-filter-toggle";
 import { BookmarkToggle } from "@/components/bookmark-toggle";
 import { SearchForm } from "@/components/search-form";
 import { SortHeader } from "@/components/sort-header";
+import { requireUser } from "@/lib/auth";
 import { buildProductsUrl, parseBookmarkedParam, parseSortParams } from "@/lib/list-url";
 import { listProducts } from "@/lib/products";
 
@@ -29,9 +30,10 @@ export default async function ProductsPage({ searchParams }: Props) {
   // URL に sort があるときだけ検索フォームに引き継がせる(初期表示では hidden を出さない)
   const formSort = rawSort !== undefined ? current : undefined;
   const bookmarked = parseBookmarkedParam(firstValue(query.bookmarked));
-  const products = listProducts({ keyword, sort: current.sort, order: current.order, bookmarkedOnly: bookmarked });
-  // トグル操作後に戻る URL(現在の q / sort / order / bookmarked)
+  // トグル操作後に戻る URL(現在の q / sort / order / bookmarked)。ログインの復帰先にも使う
   const returnTo = buildProductsUrl({ keyword, sort: formSort, bookmarked });
+  await requireUser(returnTo);
+  const products = listProducts({ keyword, sort: current.sort, order: current.order, bookmarkedOnly: bookmarked });
 
   return (
     <section className="space-y-4">

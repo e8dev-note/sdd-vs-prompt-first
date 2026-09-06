@@ -54,6 +54,7 @@ import { SearchForm } from "./search-form";    // Relative(同一ディレクト
 ## Code Organization Principles
 
 - 依存の向きは `app → components → lib`。`lib` は React に依存しない
+- 例外: `src/lib/auth.ts` だけが Next の request API(`cookies`、`redirect`)と React の `cache` に依存する。認証の純粋なロジック(`password.ts`、`session.ts`、`users.ts`)はそこから分離しテスト可能に保つ
 - DB アクセスは `lib` に閉じ、`app` の Server Component / Server Action から呼ぶ
 - 起動時にマイグレーションとシードを適用する処理は `lib` に1か所にまとめ、複数の入口から重複実行されても安全にする
 

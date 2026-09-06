@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { BookmarkToggle } from "@/components/bookmark-toggle";
 import { DeleteButton } from "@/components/delete-button";
 import { EditProductModal } from "@/components/edit-product-modal";
+import { requireUser } from "@/lib/auth";
 import { getProduct, parseProductId } from "@/lib/products";
 
 type Props = {
@@ -10,7 +11,9 @@ type Props = {
 };
 
 export default async function ProductDetailPage({ params }: Props) {
-  const id = parseProductId((await params).id);
+  const rawId = (await params).id;
+  await requireUser(`/products/${rawId}`);
+  const id = parseProductId(rawId);
   if (id === null) notFound();
   const product = getProduct(id);
   if (product === null) notFound();

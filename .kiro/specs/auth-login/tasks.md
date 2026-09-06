@@ -60,7 +60,7 @@
   - _Boundary: AppHeader_
 
 - [ ] 3. 統合と完了条件
-- [ ] 3.1 既存のページと Server Action をログイン必須にする
+- [x] 3.1 既存のページと Server Action をログイン必須にする
   - 一覧・詳細ページの先頭で保護関数を呼ぶ(復帰先は現在の URL)。詳細は id 解析より前に呼ぶ
   - 編集・削除・ブックマークの 3 つの action の先頭で保護関数を呼ぶ
   - steering の structure.md に、`lib/auth.ts` だけが Next の request API に依存する旨を追記する
