@@ -13,12 +13,36 @@ export type Product = {
 
 export type ProductInput = Omit<Product, "id" | "created_at" | "updated_at">;
 
-/** キーワードで code, name, category を部分一致検索する。空なら全件。 */
-export function listProducts(keyword = ""): Product[] {
+export const SORT_COLUMNS = ["code", "name", "category", "price"] as const;
+export type SortColumn = (typeof SORT_COLUMNS)[number];
+export type SortOrder = "asc" | "desc";
+export const DEFAULT_SORT: SortColumn = "code";
+export const DEFAULT_ORDER: SortOrder = "asc";
+
+export type ListOptions = {
+  keyword?: string;
+  sort?: SortColumn;
+  order?: SortOrder;
+};
+
+export function isSortColumn(v: unknown): v is SortColumn {
+  return typeof v === "string" && (SORT_COLUMNS as readonly string[]).includes(v);
+}
+export function isSortOrder(v: unknown): v is SortOrder {
+  return v === "asc" || v === "desc";
+}
+
+/** キーワードで code, name, category を部分一致検索し、指定列で並び替える。 */
+export function listProducts(options: ListOptions | string = {}): Product[] {
+  const opts = typeof options === "string" ? { keyword: options } : options;
+  const q = (opts.keyword ?? "").trim();
+  const sort = opts.sort ?? DEFAULT_SORT;
+  const order = opts.order ?? DEFAULT_ORDER;
+  // sort/order はホワイトリスト検証済みの値だけを埋め込む(SQL インジェクション防止)。
+  const orderBy = `ORDER BY ${sort} ${order === "desc" ? "DESC" : "ASC"}, id ASC`;
   const db = getDb();
-  const q = keyword.trim();
   if (q === "") {
-    return db.prepare("SELECT * FROM products ORDER BY code").all() as Product[];
+    return db.prepare(`SELECT * FROM products ${orderBy}`).all() as Product[];
   }
   const like = `%${escapeLike(q)}%`;
   return db
@@ -27,7 +51,7 @@ export function listProducts(keyword = ""): Product[] {
        WHERE code LIKE ? ESCAPE '\\'
           OR name LIKE ? ESCAPE '\\'
           OR category LIKE ? ESCAPE '\\'
-       ORDER BY code`,
+       ${orderBy}`,
     )
     .all(like, like, like) as Product[];
 }

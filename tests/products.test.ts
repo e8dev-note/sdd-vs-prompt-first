@@ -4,6 +4,8 @@ import {
   countProducts,
   createProduct,
   deleteProduct,
+  isSortColumn,
+  isSortOrder,
   getProduct,
   listProducts,
 } from "@/lib/products";
@@ -60,5 +62,38 @@ describe("getProduct / deleteProduct", () => {
     expect(getProduct(first.id)).toBeUndefined();
     expect(deleteProduct(first.id)).toBe(false);
     expect(countProducts()).toBe(SEED_PRODUCTS.length - 1);
+  });
+});
+
+describe("listProducts sorting", () => {
+  it("defaults to code ascending", () => {
+    const codes = listProducts({}).map((r) => r.code);
+    expect(codes).toEqual([...codes].sort());
+  });
+
+  it("sorts by price descending", () => {
+    const prices = listProducts({ sort: "price", order: "desc" }).map((r) => r.price);
+    expect(prices).toEqual([...prices].sort((a, b) => b - a));
+  });
+
+  it("sorts by name ascending and by category descending", () => {
+    const names = listProducts({ sort: "name", order: "asc" }).map((r) => r.name);
+    expect(names).toEqual([...names].sort());
+    const cats = listProducts({ sort: "category", order: "desc" }).map((r) => r.category);
+    expect(cats).toEqual([...cats].sort().reverse());
+  });
+
+  it("combines keyword and sort", () => {
+    const rows = listProducts({ keyword: "書籍", sort: "price", order: "asc" });
+    expect(rows).toHaveLength(4);
+    expect(rows.map((r) => r.price)).toEqual([2400, 2800, 3200, 3600]);
+  });
+
+  it("validates sort column and order", () => {
+    expect(isSortColumn("price")).toBe(true);
+    expect(isSortColumn("id")).toBe(false);
+    expect(isSortColumn("code; DROP TABLE products")).toBe(false);
+    expect(isSortOrder("desc")).toBe(true);
+    expect(isSortOrder("DESC")).toBe(false);
   });
 });
