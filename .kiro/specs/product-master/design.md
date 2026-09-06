@@ -105,6 +105,7 @@ src/
 └── lib/
     ├── db.ts                     # 接続 singleton、migration 適用、シード呼び出し、テスト用 reset
     ├── seed.ts                   # 初期 20 件のデータと投入関数
+    ├── time.ts                   # nowIso()。seed と products の両方から使うため分離(db → seed → products → db の循環 import を避ける)
     └── products.ts               # Product 型、一覧/検索/取得/削除、id 解析、LIKE エスケープ
 tests/
 ├── db.test.ts                    # migration 適用・冪等性・シード

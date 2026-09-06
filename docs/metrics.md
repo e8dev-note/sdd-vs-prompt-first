@@ -15,7 +15,7 @@ sdd01 の `docs/metrics.md` と同じ定義。取り込み時にマージする�
 
 | 段階 | ターン数 | 手戻り | 生成/変更ファイル数 | diff 行数(+/-) | 仕様ファイル更新 | テスト(追加/合計/結果) | 経過時間 | 備考 |
 |---|---|---|---|---|---|---|---|---|
-| step1 initial | | | | | | | | |
+| step1 initial | 4 | 0 | 28 (.kiro 除く 23、src/db/tests 17) | +1382 / -134 (.kiro 除く +699 / -134、src/db/tests +644 / -110) | 新規: requirements / research / design / tasks(計 683 行)。実装中に design.md を 1 か所更新(time.ts 追加) | 20 / 20 / pass | 17分 (22:57-23:14)。内訳: requirements 2分、design 6分、tasks 2分、impl 6分 | ターン内訳: 依頼 1 + 承認 3(requirements / design / tasks)。完了前の自己修正 2 件: lint エラー(`<a>` → `Link`)、Turbopack のファイルトレース警告(`turbopackIgnore` コメント)。要件で明文化した判断: 既定順 code 昇順、0 件表示、`/` → `/products`、英字大小無視、`%`・`_` は通常文字、空白検索は全件、非数値 id は 404、note 空表示、削除取り消しは詳細に留まる、不在削除は一覧へ、シードは 0 件時のみ 20 件、機能ごとのテスト。設計で明文化した判断: DB 初期化は初回アクセス時に冪等実行、`redirects()` で誘導、検索は GET フォーム、削除は Server Action + `window.confirm`、`LIKE ... ESCAPE`、時刻はアプリ側で ISO8601、テスト DB は `DATABASE_PATH`、ライトテーマのみ、`schema_migrations` はコード側で作成。設計と実装の乖離: 循環 import 回避のため `time.ts` を追加(design.md に追記)。動作確認は Claude in Chrome。削除の確認ダイアログは拡張をブロックするため `window.confirm` を差し替えて取り消し/承認の両方を検証 |
 | step2 sort | | | | | | | | |
 | step3 edit-modal | | | | | | | | |
 | step4 bookmark | | | | | | | | |
@@ -23,4 +23,11 @@ sdd01 の `docs/metrics.md` と同じ定義。取り込み時にマージする�
 | step6 authz | | | | | | | | |
 
 ## cc-sdd 所感(セッション内で記録)
+
+- step1: 依頼文 1 本に対し、仕様 3 フェーズ(requirements / design / tasks)で人の承認 3 回を挟んだ。承認は全て一言("OK")で、修正指示はなし。
+- prompt-first で「暗黙の決定」だった項目のうち、requirements に 12 件、design に 9 件が文言として現れた(上表 備考)。人が承認時に読む量は requirements 90 行、design 382 行、tasks 86 行。
+- cc-sdd のコマンド版(`--claude-code`)は v3.0.2 で非推奨表示(`--claude-skills` を推奨)。またセッション開始後に追加された `/kiro:*` はこのセッションからスラッシュコマンドとして呼べず、コマンドファイルの指示を読んで手で実行した。
+- discovery では Web 検索をせず、AGENTS.md の指示どおり `node_modules/next/dist/docs/` を読んだ。research.md に出典として記録。
+- 実装は tasks.md の順に TDD(テスト先行)で進め、タスクごとにコミット。UI(3.1〜4.1)はテストなし(design の Testing Strategy で手動 E2E と定義)。
+- 実装中の設計変更は 1 件(`time.ts`)。design.md に追記して整合を保った。
 
