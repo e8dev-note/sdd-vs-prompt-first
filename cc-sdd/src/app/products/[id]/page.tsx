@@ -1,0 +1,63 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { BookmarkToggle } from "@/components/bookmark-toggle";
+import { DeleteButton } from "@/components/delete-button";
+import { EditProductModal } from "@/components/edit-product-modal";
+import { requireUser } from "@/lib/auth";
+import { can } from "@/lib/authz";
+import { getProduct, parseProductId } from "@/lib/products";
+
+type Props = {
+  params: Promise<{ id: string }>;
+};
+
+export default async function ProductDetailPage({ params }: Props) {
+  const rawId = (await params).id;
+  const user = await requireUser(`/products/${rawId}`);
+  const id = parseProductId(rawId);
+  if (id === null) notFound();
+  const product = getProduct(id);
+  if (product === null) notFound();
+
+  const rows: [string, string | number][] = [
+    ["id", product.id],
+    ["code", product.code],
+    ["name", product.name],
+    ["category", product.category],
+    ["price", product.price],
+    ["note", product.note ?? ""],
+    ["bookmarked", product.bookmarked ? "ブックマーク中" : "-"],
+    ["created_at", product.created_at],
+    ["updated_at", product.updated_at],
+  ];
+
+  return (
+    <section className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-semibold text-gray-900">商品詳細</h1>
+        <Link href="/products" className="text-sm text-blue-700 underline">
+          一覧へ戻る
+        </Link>
+      </div>
+      <dl className="grid grid-cols-[10rem_1fr] gap-y-2 rounded border border-gray-200 bg-white p-4 text-sm">
+        {rows.map(([label, value]) => (
+          <div key={label} className="contents">
+            <dt className="font-medium text-gray-600">{label}</dt>
+            <dd className="text-gray-900">{value}</dd>
+          </div>
+        ))}
+      </dl>
+      <div className="flex items-center gap-2">
+        {can(user.role, "product:edit") && <EditProductModal product={product} />}
+        {can(user.role, "product:delete") && <DeleteButton id={product.id} />}
+        <BookmarkToggle
+          id={product.id}
+          bookmarked={product.bookmarked}
+          returnTo={`/products/${product.id}`}
+          label
+          canToggle={can(user.role, "bookmark:toggle")}
+        />
+      </div>
+    </section>
+  );
+}
