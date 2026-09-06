@@ -21,11 +21,13 @@ afterEach(() => {
 
 describe("users seed", () => {
   it("seeds admin / editor / viewer on first access and stores hashed passwords", () => {
-    const rows = getDb().prepare("SELECT username, password_hash FROM users ORDER BY id").all() as {
+    const rows = getDb().prepare("SELECT username, password_hash, role FROM users ORDER BY id").all() as {
       username: string;
       password_hash: string;
+      role: string;
     }[];
     expect(rows.map((r) => r.username)).toEqual(["admin", "editor", "viewer"]);
+    expect(rows.map((r) => r.role)).toEqual(["admin", "editor", "viewer"]);
     for (const r of rows) {
       expect(r.password_hash).toMatch(/^scrypt\$/);
       expect(r.password_hash).not.toContain("1234");
@@ -43,9 +45,10 @@ describe("users seed", () => {
 describe("authenticate", () => {
   it("returns the user for correct credentials", () => {
     const u = authenticate("admin", "admin1234");
-    expect(u).toMatchObject({ username: "admin" });
+    expect(u).toMatchObject({ username: "admin", role: "admin" });
+    expect(authenticate("editor", "editor1234")?.role).toBe("editor");
     expect(getUserById(u!.id)).toEqual(u);
-    expect(authenticate("viewer", "viewer1234")?.username).toBe("viewer");
+    expect(authenticate("viewer", "viewer1234")).toMatchObject({ username: "viewer", role: "viewer" });
   });
 
   it("returns null for a wrong password, unknown user, or empty input", () => {
@@ -58,7 +61,7 @@ describe("authenticate", () => {
 
   it("does not expose the password hash on the returned user", () => {
     const u = authenticate("editor", "editor1234")!;
-    expect(Object.keys(u).sort()).toEqual(["id", "username"]);
+    expect(Object.keys(u).sort()).toEqual(["id", "role", "username"]);
   });
 
   it("returns null for an unknown id", () => {
