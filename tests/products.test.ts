@@ -132,3 +132,41 @@ describe("nowIso", () => {
     expect(nowIso()).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
   });
 });
+
+describe("listProducts sorting", () => {
+  const columns = ["code", "name", "category", "price"] as const;
+
+  it.each(columns)("sorts by %s ascending and descending", (sort) => {
+    const asc = listProducts({ sort, order: "asc" }).map((p) => p[sort]);
+    const desc = listProducts({ sort, order: "desc" }).map((p) => p[sort]);
+    const sortedAsc = [...asc].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+    expect(asc).toEqual(sortedAsc);
+    expect(desc).toEqual([...sortedAsc].reverse());
+  });
+
+  it("orders price numerically", () => {
+    const prices = listProducts({ sort: "price", order: "asc" }).map((p) => p.price);
+    expect(prices[0]).toBe(0);
+    expect(prices[prices.length - 1]).toBe(3480);
+    expect(prices.indexOf(90)).toBeLessThan(prices.indexOf(120));
+    expect(prices.indexOf(950)).toBeLessThan(prices.indexOf(1200));
+  });
+
+  it("breaks ties by id ascending in both directions", () => {
+    const asc = listProducts({ sort: "price", order: "asc" }).filter((p) => p.price === 120);
+    const desc = listProducts({ sort: "price", order: "desc" }).filter((p) => p.price === 120);
+    expect(asc.map((p) => p.code)).toEqual(["ST-001", "ST-002"]);
+    expect(desc.map((p) => p.code)).toEqual(["ST-001", "ST-002"]);
+  });
+
+  it("defaults to code ascending when sort is omitted", () => {
+    expect(listProducts({ keyword: "PC" }).map((p) => p.code)).toEqual(
+      listProducts({ keyword: "PC", sort: "code", order: "asc" }).map((p) => p.code),
+    );
+  });
+
+  it("combines keyword and sort", () => {
+    const codes = listProducts({ keyword: "PC-00", sort: "price", order: "desc" }).map((p) => p.code);
+    expect(codes).toEqual(["PC-005", "PC-002", "PC-003", "PC-004", "PC-001"]);
+  });
+});

@@ -37,19 +37,27 @@ export function escapeLike(term: string): string {
   return term.replace(/[\\%_]/g, (c) => `\\${c}`);
 }
 
-/** 一覧。常に code 昇順(同値は id 昇順)。keyword は code / name / category の部分一致。 */
+/** ORDER BY 句。列名はホワイトリストを通った値のみ埋め込み、同値は id 昇順で安定させる。 */
+function orderBy(sort: SortColumn | undefined, order: SortOrder | undefined): string {
+  const column: SortColumn = sort !== undefined && isSortColumn(sort) ? sort : "code";
+  const direction = order === "desc" ? "DESC" : "ASC";
+  return `ORDER BY ${column} ${direction}, id ASC`;
+}
+
+/** 一覧。既定は code 昇順(同値は id 昇順)。keyword は code / name / category の部分一致。 */
 export function listProducts(options: ListProductsOptions = {}): Product[] {
   const keyword = options.keyword?.trim() ?? "";
   const db = getDb();
+  const ordering = orderBy(options.sort, options.order);
   if (keyword === "") {
-    return db.prepare(`SELECT ${COLUMNS} FROM products ORDER BY code ASC, id ASC`).all() as Product[];
+    return db.prepare(`SELECT ${COLUMNS} FROM products ${ordering}`).all() as Product[];
   }
   const pattern = `%${escapeLike(keyword)}%`;
   return db
     .prepare(
       `SELECT ${COLUMNS} FROM products
        WHERE code LIKE @p ESCAPE '\\' OR name LIKE @p ESCAPE '\\' OR category LIKE @p ESCAPE '\\'
-       ORDER BY code ASC, id ASC`,
+       ${ordering}`,
     )
     .all({ p: pattern }) as Product[];
 }
