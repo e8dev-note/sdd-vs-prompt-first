@@ -19,8 +19,8 @@
 | step2 sort | 1 | 0 | 5 (新規1: sort-header.tsx) | +133 / -14 | 5 / 11 / pass | 1分 (19:05-19:06) | 暗黙の決定: listProducts のシグネチャ変更(文字列→オプション型、後方互換維持)、ソート列はホワイトリスト検証、同値時は id で安定ソート、検索フォームが sort/order を hidden で維持、aria-sort 付与 |
 | step3 edit-modal | 1 | 0 | 5 (新規1: edit-product-modal.tsx) | +314 / -5 | 4 / 15 / pass | 3分 (19:06-19:09) | 完了前に自己修正1件: React 19 がアクション後にフォームをリセットし、バリデーション失敗時に入力値が消えた → 制御コンポーネント化。暗黙の決定: ネイティブ dialog を使用、useActionState + version カウンタで成功検知、price は type=text + inputMode=numeric(ブラウザ検証を避けサーバ側で統一)、note 空は null 保存 |
 | step4 bookmark | 1 | 0 | 10 (新規2: 002 migration, bookmark-toggle.tsx) | +138 / -27 | 3 / 18 / pass | 3分 (19:09-19:12) | 暗黙の決定: products 列に bookmarked フラグ追加(別テーブルにしない)、トグルはフォーム+サーバアクション(JS 不要)、既存 SortHeader の引数を keyword→preserved に変更(既存コード改変)、行ハイライト色、詳細に bookmarked 行を追加表示 |
-| step5 auth | | | | | | | |
-| step6 authz | | | | | | | |
+| step5 auth | 1 | 0 | 17 (新規11: 003 migration, auth.ts, session.ts, return-to.ts, proxy.ts, login/actions.ts, login/page.tsx, login-form.tsx, app-header.tsx, auth.test.ts, return-to.test.ts) | +437 / -5 | 9 / 27 / pass | 6分 (19:23-19:29) | **ルール変更あり**: CLAUDE.md の「認証なし」を改訂。完了前に自己修正1件: "use server" ファイルから同期関数(safeReturnTo)を export して build エラー → 別ファイルへ分離。暗黙の決定: セッションは DB テーブル(署名 Cookie ではない)、scrypt のフォーマット、proxy は Cookie 有無の楽観チェックのみで DB 照合は各ページ/アクション、ユーザー不在時もハッシュ計算して所要時間を揃える、returnTo は内部パスのみ許可、既存3アクション全てに requireUser 追加 |
+| step6 authz | 1 | 0 | 11 (新規4: 004 migration, authz.ts, forbidden/page.tsx, authz.test.ts) | +191 / -30 | 17 / 44 / pass | 4分 (19:29-19:33) | 暗黙の決定: 権限は文字列(product:edit 等)でロール→権限の表を持つ、ロールは users の列(別テーブルにしない)、拒否時の挙動は void アクションは /forbidden へリダイレクト・状態を返すアクションはメッセージ、viewer にはブックマークを操作不可の静的表示、既存 BookmarkToggle に canToggle 引数追加(既存コード改変) |
 
 ## cc-sdd
 
@@ -39,7 +39,9 @@
 - 「仕様書」に相当するものは存在しない。判断の根拠はコード内コメントとコミットメッセージにのみ残る。
 - 各段階で依頼文に書かれていない判断(上表「暗黙の決定」)を実装者が下している。SDD 側では requirements/design にこれらが明文化されるかが比較ポイント。
 - 機能追加時に既存コードへ触った箇所: step2 で listProducts のシグネチャ、step4 で SortHeader と SearchForm の引数。依頼文には現れない波及。
-- 最終規模: src + db + tests で 1,011 行、テスト 18 件。
+- step4 終了時の規模: src + db + tests で 1,011 行、テスト 18 件。step6 終了時: 1,579 行、テスト 44 件。
+- step5 は依頼が既存ルール(認証なし)と矛盾したため、依頼前にルールファイルを改訂した。prompt-first では改訂が CLAUDE.md の1行差し替えで済む一方、その判断の経緯はコミットメッセージにしか残らない。
+- step5/6 の動作確認では、ブラウザでのパスワード入力を避けるため、サーバアクションを curl で直接呼ぶ方法(Next-Action ヘッダ + multipart)を使った。フォーム偽装での権限検査の確認にもそのまま使えた。
 - 経過時間は「依頼文を受けてからコミットまで」で、ブラウザでの動作確認を含む。
 
 ## 定性比較(全段階終了後)
