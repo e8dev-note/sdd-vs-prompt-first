@@ -44,7 +44,7 @@
   - 完了状態: viewer / editor / admin それぞれでボタンの有無とヘッダ表示が権限表どおり
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 5.1_
 
-- [ ] 3.2 完了条件を検証し README にロール表を書く
+- [x] 3.2 完了条件を検証し README にロール表を書く
   - README にロールと操作の対応表を追加する
   - `npm run build`、`npm run lint`、`npm test` を全て通す
   - curl(偽装要求): viewer のセッションで削除・トグル POST → 権限なし画面へ遷移し DB 不変。viewer で更新 POST → メッセージ、DB 不変。editor で削除 → 権限なし画面、トグルと更新は成功。admin で削除成功。未ログインは `/login`
