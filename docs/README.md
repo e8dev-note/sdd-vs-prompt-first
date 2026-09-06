@@ -19,6 +19,8 @@
 3. `02-sort.md` → コミット `step2: sort`。
 4. `03-edit-modal.md` → コミット `step3: edit-modal`。
 5. `04-bookmark.md` → コミット `step4: bookmark`。
+6. `05-auth.md` → コミット `step5: auth`。**この段階でルールファイルの「認証なし」を改訂する**(改訂内容は `CLAUDE.md.template` 参照)。
+7. `06-authz.md` → コミット `step6: authz`。
 6. 各段階の直後に `docs/metrics.md` の該当行を埋める。
 
 ## トラック固有の手順

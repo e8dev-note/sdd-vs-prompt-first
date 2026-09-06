@@ -19,6 +19,8 @@
 | step2 sort | 1 | 0 | 5 (新規1: sort-header.tsx) | +133 / -14 | 5 / 11 / pass | 1分 (19:05-19:06) | 暗黙の決定: listProducts のシグネチャ変更(文字列→オプション型、後方互換維持)、ソート列はホワイトリスト検証、同値時は id で安定ソート、検索フォームが sort/order を hidden で維持、aria-sort 付与 |
 | step3 edit-modal | 1 | 0 | 5 (新規1: edit-product-modal.tsx) | +314 / -5 | 4 / 15 / pass | 3分 (19:06-19:09) | 完了前に自己修正1件: React 19 がアクション後にフォームをリセットし、バリデーション失敗時に入力値が消えた → 制御コンポーネント化。暗黙の決定: ネイティブ dialog を使用、useActionState + version カウンタで成功検知、price は type=text + inputMode=numeric(ブラウザ検証を避けサーバ側で統一)、note 空は null 保存 |
 | step4 bookmark | 1 | 0 | 10 (新規2: 002 migration, bookmark-toggle.tsx) | +138 / -27 | 3 / 18 / pass | 3分 (19:09-19:12) | 暗黙の決定: products 列に bookmarked フラグ追加(別テーブルにしない)、トグルはフォーム+サーバアクション(JS 不要)、既存 SortHeader の引数を keyword→preserved に変更(既存コード改変)、行ハイライト色、詳細に bookmarked 行を追加表示 |
+| step5 auth | | | | | | | |
+| step6 authz | | | | | | | |
 
 ## cc-sdd
 
@@ -28,6 +30,8 @@
 | step2 sort | | | | | | | | |
 | step3 edit-modal | | | | | | | | |
 | step4 bookmark | | | | | | | | |
+| step5 auth | | | | | | | | |
+| step6 authz | | | | | | | | |
 
 ## prompt-first 所感(セッション内で記録)
 
