@@ -10,6 +10,7 @@ import {
   listProducts,
   nowIso,
   parseProductId,
+  setBookmark,
   updateProduct,
 } from "@/lib/products";
 import { SEED_PRODUCTS } from "@/lib/seed";
@@ -209,5 +210,54 @@ describe("updateProduct", () => {
     const prices = listProducts({ sort: "price", order: "desc" }).map((p) => p.price);
     expect(prices).toContain(999);
     expect(prices).toEqual([...prices].sort((a, b) => b - a));
+  });
+});
+
+describe("bookmark", () => {
+  it("defaults to false for every product", () => {
+    const list = listProducts();
+    expect(list.every((p) => p.bookmarked === false)).toBe(true);
+    expect(typeof list[0].bookmarked).toBe("boolean");
+  });
+
+  it("sets and clears the flag, returning the number of affected rows", () => {
+    const id = insert("B-1", "b", "cat");
+    expect(setBookmark(id, true)).toBe(1);
+    expect(getProduct(id)!.bookmarked).toBe(true);
+    expect(setBookmark(id, true)).toBe(1);
+    expect(setBookmark(id, false)).toBe(1);
+    expect(getProduct(id)!.bookmarked).toBe(false);
+  });
+
+  it("returns 0 for a missing product", () => {
+    expect(setBookmark(999999, true)).toBe(0);
+  });
+
+  it("does not change updated_at", () => {
+    const id = insert("B-2", "b", "cat");
+    const before = getProduct(id)!.updated_at;
+    setBookmark(id, true);
+    expect(getProduct(id)!.updated_at).toBe(before);
+  });
+
+  it("filters with bookmarkedOnly, combined with keyword and sort", () => {
+    const a = insert("B-3", "alpha", "zz", 10);
+    const b = insert("B-4", "beta", "zz", 30);
+    insert("B-5", "gamma", "zz", 20);
+    setBookmark(a, true);
+    setBookmark(b, true);
+    expect(listProducts({ bookmarkedOnly: true }).map((p) => p.code)).toEqual(["B-3", "B-4"]);
+    expect(listProducts({ bookmarkedOnly: true, keyword: "beta" }).map((p) => p.code)).toEqual(["B-4"]);
+    expect(listProducts({ bookmarkedOnly: true, sort: "price", order: "desc" }).map((p) => p.code)).toEqual(["B-4", "B-3"]);
+    expect(listProducts({ bookmarkedOnly: false, keyword: "zz" })).toHaveLength(3);
+    expect(listProducts({ keyword: "zz" })).toHaveLength(3);
+  });
+
+  it("disappears with the product when deleted", () => {
+    const id = insert("B-6", "b", "cat");
+    setBookmark(id, true);
+    deleteProduct(id);
+    expect(getProduct(id)).toBeNull();
+    expect(listProducts({ bookmarkedOnly: true }).some((p) => p.id === id)).toBe(false);
   });
 });

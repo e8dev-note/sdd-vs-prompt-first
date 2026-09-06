@@ -13,6 +13,14 @@ export interface Product {
   note: string | null;
   created_at: string; // ISO8601 UTC
   updated_at: string; // ISO8601 UTC
+  bookmarked: boolean;
+}
+
+/** DB の生の行。bookmarked は 0/1。 */
+type ProductRow = Omit<Product, "bookmarked"> & { bookmarked: 0 | 1 };
+
+function rowToProduct(row: ProductRow): Product {
+  return { ...row, bookmarked: row.bookmarked === 1 };
 }
 
 export const SORT_COLUMNS = ["code", "name", "category", "price"] as const;
@@ -30,9 +38,11 @@ export interface ListProductsOptions {
   sort?: SortColumn;
   /** 省略時 "asc" */
   order?: SortOrder;
+  /** true なら bookmarked = 1 のみ */
+  bookmarkedOnly?: boolean;
 }
 
-const COLUMNS = "id, code, name, category, price, note, created_at, updated_at";
+const COLUMNS = "id, code, name, category, price, note, created_at, updated_at, bookmarked";
 
 /** LIKE のワイルドカード(% _)とエスケープ文字(\)を通常文字として扱えるようにする。 */
 export function escapeLike(term: string): string {
@@ -46,29 +56,30 @@ function orderBy(sort: SortColumn | undefined, order: SortOrder | undefined): st
   return `ORDER BY ${column} ${direction}, id ASC`;
 }
 
-/** 一覧。既定は code 昇順(同値は id 昇順)。keyword は code / name / category の部分一致。 */
+/** 一覧。既定は code 昇順(同値は id 昇順)。keyword は code / name / category の部分一致。bookmarkedOnly はブックマーク中のみ。 */
 export function listProducts(options: ListProductsOptions = {}): Product[] {
   const keyword = options.keyword?.trim() ?? "";
-  const db = getDb();
-  const ordering = orderBy(options.sort, options.order);
-  if (keyword === "") {
-    return db.prepare(`SELECT ${COLUMNS} FROM products ${ordering}`).all() as Product[];
+  const conditions: string[] = [];
+  const params: Record<string, string> = {};
+  if (keyword !== "") {
+    conditions.push("(code LIKE @p ESCAPE '\\' OR name LIKE @p ESCAPE '\\' OR category LIKE @p ESCAPE '\\')");
+    params.p = `%${escapeLike(keyword)}%`;
   }
-  const pattern = `%${escapeLike(keyword)}%`;
-  return db
-    .prepare(
-      `SELECT ${COLUMNS} FROM products
-       WHERE code LIKE @p ESCAPE '\\' OR name LIKE @p ESCAPE '\\' OR category LIKE @p ESCAPE '\\'
-       ${ordering}`,
-    )
-    .all({ p: pattern }) as Product[];
+  if (options.bookmarkedOnly) {
+    conditions.push("bookmarked = 1");
+  }
+  const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+  const rows = getDb()
+    .prepare(`SELECT ${COLUMNS} FROM products ${where} ${orderBy(options.sort, options.order)}`)
+    .all(params) as ProductRow[];
+  return rows.map(rowToProduct);
 }
 
 export function getProduct(id: number): Product | null {
   const row = getDb().prepare(`SELECT ${COLUMNS} FROM products WHERE id = ?`).get(id) as
-    | Product
+    | ProductRow
     | undefined;
-  return row ?? null;
+  return row ? rowToProduct(row) : null;
 }
 
 /** 4 項目と updated_at を更新し、更新後の行を返す。不在なら null。id / code / created_at は変更しない。 */
@@ -79,6 +90,11 @@ export function updateProduct(id: number, input: ProductInput): Product | null {
     )
     .run(input.name, input.category, input.price, input.note, nowIso(), id).changes;
   return changes === 0 ? null : getProduct(id);
+}
+
+/** ブックマークを設定し、影響行数(0 or 1)を返す。updated_at は変更しない。 */
+export function setBookmark(id: number, bookmarked: boolean): number {
+  return getDb().prepare("UPDATE products SET bookmarked = ? WHERE id = ?").run(bookmarked ? 1 : 0, id).changes;
 }
 
 /** 削除した行数(0 or 1)。存在しなくても例外にしない。 */
