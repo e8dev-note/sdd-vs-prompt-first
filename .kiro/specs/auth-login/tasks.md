@@ -38,7 +38,7 @@
   - 完了状態: 保護関数を呼ぶページ / action が、Cookie なし・偽造・期限切れのいずれでも `/login` へ遷移する
   - _Requirements: 3.1, 3.2, 3.5, 3.6, 4.1, 4.2_
 
-- [ ] 2.2 ログイン / ログアウトの Server Action とログイン画面を実装する
+- [x] 2.2 ログイン / ログアウトの Server Action とログイン画面を実装する
   - ログイン: username / password / 復帰先を受け取り、認証 → セッション発行 → Cookie 設定 → 検証済みの復帰先(既定 `/products`)へ遷移。失敗は同一メッセージと username を状態で返す(password は返さない)
   - ログアウト: Cookie のセッションを破棄し Cookie を無効化して `/login` へ
   - ログイン画面: ログイン済みなら `/products` へ。フォームは username / password / hidden の復帰先 / 送信。エラーは alert 領域に表示し、username を保持
