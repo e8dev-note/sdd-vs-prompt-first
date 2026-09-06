@@ -10,6 +10,7 @@ import {
   listProducts,
   nowIso,
   parseProductId,
+  updateProduct,
 } from "@/lib/products";
 import { SEED_PRODUCTS } from "@/lib/seed";
 
@@ -168,5 +169,45 @@ describe("listProducts sorting", () => {
   it("combines keyword and sort", () => {
     const codes = listProducts({ keyword: "PC-00", sort: "price", order: "desc" }).map((p) => p.code);
     expect(codes).toEqual(["PC-005", "PC-002", "PC-003", "PC-004", "PC-001"]);
+  });
+});
+
+describe("updateProduct", () => {
+  const input = { name: "新しい名前", category: "新カテゴリ", price: 999, note: null };
+
+  it("updates the four fields and updated_at, returning the new row", async () => {
+    const id = insert("U-1", "old", "cat", 1);
+    const before = getProduct(id)!;
+    await new Promise((r) => setTimeout(r, 5));
+    const updated = updateProduct(id, { ...input, note: "メモ" });
+    expect(updated).toMatchObject({ id, code: "U-1", ...input, note: "メモ" });
+    expect(updated!.updated_at > before.updated_at).toBe(true);
+    expect(getProduct(id)).toEqual(updated);
+  });
+
+  it("keeps id, code, and created_at unchanged", () => {
+    const id = insert("U-2", "old", "cat", 1);
+    const before = getProduct(id)!;
+    const updated = updateProduct(id, input)!;
+    expect(updated.id).toBe(id);
+    expect(updated.code).toBe("U-2");
+    expect(updated.created_at).toBe(before.created_at);
+  });
+
+  it("returns null when the product does not exist", () => {
+    expect(updateProduct(999999, input)).toBeNull();
+    const id = insert("U-3", "old", "cat", 1);
+    deleteProduct(id);
+    expect(updateProduct(id, input)).toBeNull();
+  });
+
+  it("is reflected in list and search", () => {
+    const id = insert("U-4", "old", "cat", 1);
+    updateProduct(id, { ...input, name: "ユニーク検索語" });
+    expect(listProducts({ keyword: "ユニーク検索語" }).map((p) => p.id)).toEqual([id]);
+    expect(listProducts({ keyword: "old" })).toHaveLength(0);
+    const prices = listProducts({ sort: "price", order: "desc" }).map((p) => p.price);
+    expect(prices).toContain(999);
+    expect(prices).toEqual([...prices].sort((a, b) => b - a));
   });
 });

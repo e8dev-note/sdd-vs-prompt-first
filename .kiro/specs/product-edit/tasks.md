@@ -8,7 +8,7 @@
   - 完了状態: 上記テストが通り、関数は DB・React に依存しない
   - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.7, 3.3, 5.1_
 
-- [ ] 1.2 商品の更新をリポジトリに追加する
+- [x] 1.2 商品の更新をリポジトリに追加する
   - 検証済み入力で name / category / price / note と updated_at(保存時刻)を更新し、更新後の行を返す
   - 影響行数 0(削除済み)なら null を返す。id / code / created_at は変更しない
   - テスト: 値と updated_at が更新される(created_at より後)、code と created_at が不変、不在で null、更新後の一覧・検索で新しい値が出る

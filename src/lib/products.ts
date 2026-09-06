@@ -1,4 +1,6 @@
 import { getDb } from "./db";
+import type { ProductInput } from "./product-input";
+import { nowIso } from "./time";
 
 export { nowIso } from "./time";
 
@@ -67,6 +69,16 @@ export function getProduct(id: number): Product | null {
     | Product
     | undefined;
   return row ?? null;
+}
+
+/** 4 項目と updated_at を更新し、更新後の行を返す。不在なら null。id / code / created_at は変更しない。 */
+export function updateProduct(id: number, input: ProductInput): Product | null {
+  const changes = getDb()
+    .prepare(
+      "UPDATE products SET name = ?, category = ?, price = ?, note = ?, updated_at = ? WHERE id = ?",
+    )
+    .run(input.name, input.category, input.price, input.note, nowIso(), id).changes;
+  return changes === 0 ? null : getProduct(id);
 }
 
 /** 削除した行数(0 or 1)。存在しなくても例外にしない。 */
