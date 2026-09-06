@@ -51,7 +51,7 @@
   - _Requirements: 2.1, 2.4, 4.1, 4.3_
   - _Boundary: Proxy_
 
-- [ ] 2.4 (P) 共通ヘッダを Server Component にして username とログアウトを表示する
+- [x] 2.4 (P) 共通ヘッダを Server Component にして username とログアウトを表示する
   - ログイン中はアプリ名・一覧リンク・username・ログアウトボタン(フォーム)を表示。未ログイン(ログイン画面)はアプリ名のみ
   - レイアウトの静的ヘッダを置き換える
   - 完了状態: ログイン後の全画面に username とログアウトが出て、ログイン画面には出ない
