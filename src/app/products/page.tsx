@@ -4,6 +4,7 @@ import { BookmarkToggle } from "@/components/bookmark-toggle";
 import { SearchForm } from "@/components/search-form";
 import { SortHeader } from "@/components/sort-header";
 import { requireUser } from "@/lib/auth";
+import { can } from "@/lib/authz";
 import { buildProductsUrl, parseBookmarkedParam, parseSortParams } from "@/lib/list-url";
 import { listProducts } from "@/lib/products";
 
@@ -32,7 +33,8 @@ export default async function ProductsPage({ searchParams }: Props) {
   const bookmarked = parseBookmarkedParam(firstValue(query.bookmarked));
   // トグル操作後に戻る URL(現在の q / sort / order / bookmarked)。ログインの復帰先にも使う
   const returnTo = buildProductsUrl({ keyword, sort: formSort, bookmarked });
-  await requireUser(returnTo);
+  const user = await requireUser(returnTo);
+  const canToggle = can(user.role, "bookmark:toggle");
   const products = listProducts({ keyword, sort: current.sort, order: current.order, bookmarkedOnly: bookmarked });
 
   return (
@@ -72,7 +74,7 @@ export default async function ProductsPage({ searchParams }: Props) {
                 className={`border-b border-gray-200 ${p.bookmarked ? "bg-amber-50 hover:bg-amber-100" : "hover:bg-gray-50"}`}
               >
                 <td className="px-2 py-1 text-center">
-                  <BookmarkToggle id={p.id} bookmarked={p.bookmarked} returnTo={returnTo} />
+                  <BookmarkToggle id={p.id} bookmarked={p.bookmarked} returnTo={returnTo} canToggle={canToggle} />
                 </td>
                 <td className="px-3 py-2 font-mono">
                   <Link href={`/products/${p.id}`} className="text-blue-700 underline">

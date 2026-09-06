@@ -7,10 +7,24 @@ type Props = {
   returnTo: string;
   /** true なら「ブックマーク中」/「ブックマーク」の文字を添える(詳細用) */
   label?: boolean;
+  /** false なら切り替え操作を出さず、状態の印だけを描く(viewer 用) */
+  canToggle?: boolean;
 };
 
 /** フォーム + Server Action のトグル。JS 不要。hidden には「次の状態」を持たせる(冪等)。 */
-export function BookmarkToggle({ id, bookmarked, returnTo, label = false }: Props) {
+export function BookmarkToggle({ id, bookmarked, returnTo, label = false, canToggle = true }: Props) {
+  if (!canToggle) {
+    return (
+      <span
+        aria-label={bookmarked ? "ブックマーク中" : "ブックマークなし"}
+        title={bookmarked ? "ブックマーク中" : "ブックマークなし"}
+        className={`inline-flex items-center gap-1 px-1.5 py-0.5 text-base leading-none ${bookmarked ? "text-amber-500" : "text-gray-300"}`}
+      >
+        <span aria-hidden="true">{bookmarked ? "★" : "☆"}</span>
+        {label && <span className="text-sm text-gray-700">{bookmarked ? "ブックマーク中" : "ブックマークなし"}</span>}
+      </span>
+    );
+  }
   return (
     <form action={toggleBookmarkAction} className="inline">
       <input type="hidden" name="id" value={id} />

@@ -21,6 +21,7 @@ export async function AppHeader() {
             <div className="ml-auto flex items-center gap-3 text-sm text-gray-700">
               <span>
                 ログイン中: <span className="font-medium text-gray-900">{user.username}</span>
+                <span className="ml-1 rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-700">{user.role}</span>
               </span>
               <form action={logoutAction}>
                 <button

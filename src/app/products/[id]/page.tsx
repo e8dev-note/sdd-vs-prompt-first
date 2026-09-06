@@ -4,6 +4,7 @@ import { BookmarkToggle } from "@/components/bookmark-toggle";
 import { DeleteButton } from "@/components/delete-button";
 import { EditProductModal } from "@/components/edit-product-modal";
 import { requireUser } from "@/lib/auth";
+import { can } from "@/lib/authz";
 import { getProduct, parseProductId } from "@/lib/products";
 
 type Props = {
@@ -12,7 +13,7 @@ type Props = {
 
 export default async function ProductDetailPage({ params }: Props) {
   const rawId = (await params).id;
-  await requireUser(`/products/${rawId}`);
+  const user = await requireUser(`/products/${rawId}`);
   const id = parseProductId(rawId);
   if (id === null) notFound();
   const product = getProduct(id);
@@ -47,9 +48,15 @@ export default async function ProductDetailPage({ params }: Props) {
         ))}
       </dl>
       <div className="flex items-center gap-2">
-        <EditProductModal product={product} />
-        <DeleteButton id={product.id} />
-        <BookmarkToggle id={product.id} bookmarked={product.bookmarked} returnTo={`/products/${product.id}`} label />
+        {can(user.role, "product:edit") && <EditProductModal product={product} />}
+        {can(user.role, "product:delete") && <DeleteButton id={product.id} />}
+        <BookmarkToggle
+          id={product.id}
+          bookmarked={product.bookmarked}
+          returnTo={`/products/${product.id}`}
+          label
+          canToggle={can(user.role, "bookmark:toggle")}
+        />
       </div>
     </section>
   );
