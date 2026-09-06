@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/session";
+import { can } from "@/lib/authz";
 import {
   DEFAULT_ORDER,
   DEFAULT_SORT,
@@ -14,7 +15,8 @@ import { BookmarkToggle } from "@/components/bookmark-toggle";
 export const dynamic = "force-dynamic";
 
 export default async function ProductsPage(props: PageProps<"/products">) {
-  await requireUser("/products");
+  const user = await requireUser("/products");
+  const canToggle = can(user.role, "bookmark:toggle");
   const sp = await props.searchParams;
   const q = typeof sp.q === "string" ? sp.q : "";
   const sort = isSortColumn(sp.sort) ? sp.sort : DEFAULT_SORT;
@@ -53,7 +55,7 @@ export default async function ProductsPage(props: PageProps<"/products">) {
               products.map((p) => (
                 <tr key={p.id} className={`border-b hover:bg-zinc-50 ${p.bookmarked ? "bg-amber-50" : ""}`}>
                   <td className="px-1 py-1 text-center">
-                    <BookmarkToggle id={p.id} bookmarked={p.bookmarked === 1} />
+                    <BookmarkToggle id={p.id} bookmarked={p.bookmarked === 1} canToggle={canToggle} />
                   </td>
                   <td className="px-3 py-2 font-mono">
                     <Link href={`/products/${p.id}`} className="text-blue-700 underline">

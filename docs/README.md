@@ -10,7 +10,16 @@
 - `prompt-first/` … トラックA。段階ごとにコミットし、`prompt-first-stepN` タグを打つ。
 - `cc-sdd/` … トラックB。別セッションで作成。同様に `cc-sdd-stepN` タグを打つ。
 
-リポジトリはこのルート1つ(モノレポ)。段階間の差分は `git diff prompt-first-step1 prompt-first-step2 -- prompt-first` のようにタグとパスで取る。
+リポジトリはこのルート1つ(モノレポ)。prompt-first の step0〜step4 は subtree 取り込み前のコミット(ファイルがルート直下)を指し、step5 以降は `prompt-first/` 配下を指す。段階間の差分は次のように取る。
+
+```bash
+# step4 まで(どちらもルート直下)
+git diff --stat prompt-first-step1 prompt-first-step2
+# step4 → step5 以降(取り込み前後をまたぐ場合はサブツリーを指定)
+git diff --stat prompt-first-step4 prompt-first-step5:prompt-first
+# step5 以降同士
+git diff --stat prompt-first-step5 prompt-first-step6 -- prompt-first
+```
 
 ## 手順(各トラック共通)
 

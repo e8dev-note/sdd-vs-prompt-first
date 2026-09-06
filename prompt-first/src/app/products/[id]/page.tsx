@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/session";
+import { can } from "@/lib/authz";
 import { getProduct } from "@/lib/products";
 import { DeleteButton } from "@/components/delete-button";
 import { EditProductModal } from "@/components/edit-product-modal";
@@ -11,7 +12,7 @@ export const dynamic = "force-dynamic";
 
 export default async function ProductDetailPage(props: PageProps<"/products/[id]">) {
   const { id: rawId } = await props.params;
-  await requireUser(`/products/${rawId}`);
+  const user = await requireUser(`/products/${rawId}`);
   const id = Number(rawId);
   const product = Number.isInteger(id) ? getProduct(id) : undefined;
   if (!product) notFound();
@@ -37,7 +38,12 @@ export default async function ProductDetailPage(props: PageProps<"/products/[id]
       </p>
       <div className="mb-4 flex items-center gap-3">
         <h1 className="text-2xl font-semibold">商品詳細</h1>
-        <BookmarkToggle id={product.id} bookmarked={product.bookmarked === 1} withLabel />
+        <BookmarkToggle
+          id={product.id}
+          bookmarked={product.bookmarked === 1}
+          withLabel
+          canToggle={can(user.role, "bookmark:toggle")}
+        />
       </div>
       <table className="w-full border-collapse text-sm">
         <tbody>
@@ -50,11 +56,16 @@ export default async function ProductDetailPage(props: PageProps<"/products/[id]
         </tbody>
       </table>
       <div className="mt-6 flex items-center gap-3">
-        <EditProductModal product={product} />
-        <form action={deleteProductAction}>
-          <input type="hidden" name="id" value={product.id} />
-          <DeleteButton />
-        </form>
+        {can(user.role, "product:edit") && <EditProductModal product={product} />}
+        {can(user.role, "product:delete") && (
+          <form action={deleteProductAction}>
+            <input type="hidden" name="id" value={product.id} />
+            <DeleteButton />
+          </form>
+        )}
+        {!can(user.role, "product:edit") && !can(user.role, "product:delete") && (
+          <p className="text-sm text-zinc-500">閲覧のみ(編集・削除の権限がありません)</p>
+        )}
       </div>
     </main>
   );

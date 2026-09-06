@@ -29,13 +29,24 @@ http://localhost:3000 を開くと `/products` にリダイレクトします。
 
 初期ユーザー:
 
-| username | password |
-|---|---|
-| admin | admin1234 |
-| editor | editor1234 |
-| viewer | viewer1234 |
+| username | password | role |
+|---|---|---|
+| admin | admin1234 | admin |
+| editor | editor1234 | editor |
+| viewer | viewer1234 | viewer |
 
 パスワードは scrypt(node:crypto)でハッシュ化して保存しています。
+
+## ロールと権限
+
+| 操作 | viewer | editor | admin |
+|---|:-:|:-:|:-:|
+| 一覧・検索・並び替え・ブックマークのみ表示・詳細の閲覧 | ○ | ○ | ○ |
+| 商品の編集 | - | ○ | ○ |
+| ブックマークの ON/OFF | - | ○ | ○ |
+| 商品の削除 | - | - | ○ |
+
+権限のない操作は画面に表示されず、サーバ側(Server Action)でも拒否されます。
 
 ## 検証コマンド
 

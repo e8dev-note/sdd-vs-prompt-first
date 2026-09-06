@@ -1,9 +1,11 @@
 import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 import { getDb } from "./db";
+import type { Role } from "./authz";
 
 export type User = {
   id: number;
   username: string;
+  role: Role;
   created_at: string;
 };
 
@@ -27,17 +29,17 @@ export function verifyPassword(password: string, stored: string): boolean {
   return actual.length === expected.length && timingSafeEqual(actual, expected);
 }
 
-export function createUser(username: string, password: string): User {
+export function createUser(username: string, password: string, role: Role = "viewer"): User {
   const db = getDb();
   const result = db
-    .prepare("INSERT INTO users (username, password_hash, created_at) VALUES (?, ?, ?)")
-    .run(username, hashPassword(password), new Date().toISOString());
+    .prepare("INSERT INTO users (username, password_hash, role, created_at) VALUES (?, ?, ?, ?)")
+    .run(username, hashPassword(password), role, new Date().toISOString());
   return getUserById(Number(result.lastInsertRowid))!;
 }
 
 export function getUserById(id: number): User | undefined {
   return getDb()
-    .prepare("SELECT id, username, created_at FROM users WHERE id = ?")
+    .prepare("SELECT id, username, role, created_at FROM users WHERE id = ?")
     .get(id) as User | undefined;
 }
 
@@ -48,7 +50,7 @@ export function countUsers(): number {
 /** username と password を検証し、一致すればユーザーを返す。 */
 export function authenticate(username: string, password: string): User | undefined {
   const row = getDb()
-    .prepare("SELECT id, username, password_hash, created_at FROM users WHERE username = ?")
+    .prepare("SELECT id, username, role, password_hash, created_at FROM users WHERE username = ?")
     .get(username) as (User & { password_hash: string }) | undefined;
   if (!row) {
     // ユーザー不在でも所要時間を揃える(ユーザー名の存在を推測されにくくする)。
@@ -56,7 +58,7 @@ export function authenticate(username: string, password: string): User | undefin
     return undefined;
   }
   if (!verifyPassword(password, row.password_hash)) return undefined;
-  return { id: row.id, username: row.username, created_at: row.created_at };
+  return { id: row.id, username: row.username, role: row.role, created_at: row.created_at };
 }
 const DUMMY_HASH = hashPassword("dummy");
 
@@ -81,7 +83,7 @@ export function getUserBySessionToken(
   if (!token) return undefined;
   return getDb()
     .prepare(
-      `SELECT u.id, u.username, u.created_at
+      `SELECT u.id, u.username, u.role, u.created_at
        FROM sessions s JOIN users u ON u.id = s.user_id
        WHERE s.token = ? AND s.expires_at > ?`,
     )
@@ -98,15 +100,15 @@ export function purgeExpiredSessions(now: Date = new Date()): number {
     .changes;
 }
 
-export const SEED_USERS: { username: string; password: string }[] = [
-  { username: "admin", password: "admin1234" },
-  { username: "editor", password: "editor1234" },
-  { username: "viewer", password: "viewer1234" },
+export const SEED_USERS: { username: string; password: string; role: Role }[] = [
+  { username: "admin", password: "admin1234", role: "admin" },
+  { username: "editor", password: "editor1234", role: "editor" },
+  { username: "viewer", password: "viewer1234", role: "viewer" },
 ];
 
 /** users が空のときだけ初期ユーザーを投入する。 */
 export function seedUsersIfEmpty(): number {
   if (countUsers() > 0) return 0;
-  for (const u of SEED_USERS) createUser(u.username, u.password);
+  for (const u of SEED_USERS) createUser(u.username, u.password, u.role);
   return SEED_USERS.length;
 }

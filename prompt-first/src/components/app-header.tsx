@@ -16,6 +16,7 @@ export async function AppHeader() {
             <span>
               <span className="text-zinc-500">ログイン中: </span>
               <span className="font-medium">{user.username}</span>
+              <span className="ml-1 rounded bg-zinc-200 px-1.5 py-0.5 text-xs text-zinc-700">{user.role}</span>
             </span>
             <form action={logoutAction}>
               <button type="submit" className="rounded border border-zinc-300 px-3 py-1 hover:bg-zinc-100">
