@@ -45,3 +45,4 @@ git diff --stat prompt-first-step5 prompt-first-step6 -- prompt-first
 
 - prompt-first: 2026-09-06 に step0〜step4 完了(`prompt-first/`、タグ `prompt-first-step0`〜`step4`)。
 - cc-sdd: 未着手。別セッションで `cc-sdd/` に作成する。
+- 記事下書きは `docs/article/` に置く(git 管理外)。
