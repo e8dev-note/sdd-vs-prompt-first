@@ -263,7 +263,7 @@ export async function logoutAction(): Promise<void>; // Cookie の session を d
 
 #### LoginForm(`src/components/login-form.tsx`)
 - `'use client'`。`useActionState(loginAction, {})`。username(`defaultValue={state.username}`)、password、hidden `returnTo`、送信(`disabled={pending}`)。`state.error` を `role="alert"` で表示
-- Open Question: JS 無効時に `state.error` が描画されるかは実装後に curl で確認。描画されなければ失敗時に `redirect("/login?error=1&username=...")` へ変更し、ページ側でクエリからエラーと username を出す
+- 判定済み(実装時に curl で確認): JS 無効のフォーム送信でも Next.js は action の戻り値を初期状態として再描画し、`state.error` と `username` が HTML に含まれる(HTTP 200)。代替案(クエリ方式)は不要
 
 #### AppHeader(`src/components/app-header.tsx`)
 - Server Component。`await getCurrentUser()`。ユーザーがいればアプリ名 + 商品一覧リンク + 右側に username と `<form action={logoutAction}><button>ログアウト</button></form>`。いなければアプリ名のみ

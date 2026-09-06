@@ -68,7 +68,7 @@
   - _Depends: 2.1_
   - _Requirements: 4.1, 4.2, 4.4_
 
-- [ ] 3.2 完了条件を検証し README を更新する
+- [x] 3.2 完了条件を検証し README を更新する
   - README にログイン方法(`/login`)と初期ユーザー 3 件を記載する
   - `npm run build`、`npm run lint`、`npm test` を全て通す
   - ブラウザ / curl で: 未ログインで `/products?q=ST` → `/login?returnTo=` → 誤パスワードで同一エラー・username 保持 → 正しいパスワードで `/products?q=ST` に戻る → ヘッダに username → ログアウト → 同じ Cookie 値で再アクセスすると `/login` → 偽 Cookie は `/login` → curl で JS なしログイン(303 + Set-Cookie の属性)と JS なしのエラー表示 → 未ログインで Server Action POST → `/login` → `/` → `/login`

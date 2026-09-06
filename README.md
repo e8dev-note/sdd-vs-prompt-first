@@ -16,12 +16,27 @@ npm install
 npm run dev
 ```
 
-ブラウザで http://localhost:3000 を開くと商品一覧(`/products`)に移動します。
+ブラウザで http://localhost:3000 を開くとログイン画面(`/login`)に移動します。ログイン後は商品一覧(`/products`)へ移動します。
+
+## ログイン
+
+- ログイン画面: http://localhost:3000/login
+- 初期ユーザー(初回起動時に自動投入。パスワードは scrypt でハッシュ化して保存):
+
+| username | password |
+|---|---|
+| admin | admin1234 |
+| editor | editor1234 |
+| viewer | viewer1234 |
+
+- セッションは HttpOnly Cookie で管理し、有効期限はログインから 24 時間です。画面上部のヘッダにログイン中の username とログアウトボタンがあります。
+- 未ログインで `/products` 配下にアクセスすると `/login` にリダイレクトされ、ログイン後に元の画面へ戻ります。
 
 初回起動時に `data/app.db` が作成され、`db/migrations/` の SQL が順に適用されたあと、商品が 0 件なら初期データ 20 件が投入されます。DB を初期化したい場合は `data/app.db` を削除して再起動してください。
 
 ## 機能
 
+- ログイン / ログアウト(`/login`)。`/products` 配下と、編集・削除・ブックマークの操作はログインが必要
 - 商品一覧 `/products`: code / name / category / price を表形式で表示(code 昇順)
 - キーワード検索: 一覧上部の検索ボックス。code / name / category の部分一致。条件は `?q=` に反映され、リロードしても保持されます
 - 商品詳細 `/products/[id]`: 全列を表示。存在しない id は 404
@@ -39,7 +54,8 @@ npm test        # Vitest(tests/ 配下。一時ディレクトリの DB を使�
 
 - `src/app/` … 画面と Server Action
 - `src/components/` … UI 部品
-- `src/lib/` … DB 接続、マイグレーション適用、シード、商品データアクセス
+- `src/lib/` … DB 接続、マイグレーション適用、シード、商品データアクセス、認証(パスワードハッシュ、セッション、ユーザー)
+- `src/proxy.ts` … 未ログインの `/products` 配下アクセスを `/login` へ送る楽観チェック
 - `db/migrations/` … スキーマ変更の SQL(連番、追記のみ)
 - `data/` … SQLite ファイル(git 管理外)
 - `tests/` … Vitest のテスト
