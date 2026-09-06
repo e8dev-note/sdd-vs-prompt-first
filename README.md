@@ -1,36 +1,37 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 商品マスタ管理
 
-## Getting Started
+ローカルで動く最小の商品マスタ管理アプリ(Next.js + SQLite)。
 
-First, run the development server:
+## 起動手順
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+http://localhost:3000 を開くと `/products` にリダイレクトします。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+初回起動時に `data/app.db` が作成され、`db/migrations/` のマイグレーションが適用された後、商品が空なら 20 件のシードが投入されます。
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 機能
 
-## Learn More
+- 商品一覧 `/products` … code, name, category, price を表形式で表示
+- キーワード検索 … 検索ボックスの文字列で code / name / category を部分一致検索。条件は `?q=` に反映される
+- 商品詳細 `/products/[id]` … 全列を表示。存在しない id は 404
+- 削除 … 詳細画面の「削除」ボタン。確認ダイアログの後に削除し、一覧へ戻る
 
-To learn more about Next.js, take a look at the following resources:
+## 検証コマンド
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm run lint
+npm test
+npm run build
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## DB をリセットする
 
-## Deploy on Vercel
+```bash
+rm -f data/app.db data/app.db-wal data/app.db-shm
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+次回起動時に再作成・再シードされます。
