@@ -29,6 +29,25 @@ export interface ProductsUrlParams {
   keyword?: string;
   /** 未指定なら sort / order を付けない */
   sort?: SortState;
+  /** true のときだけ bookmarked=1 を付ける */
+  bookmarked?: boolean;
+}
+
+/** ?bookmarked= は "1" のときだけ有効。 */
+export function parseBookmarkedParam(raw: string | undefined): boolean {
+  return raw === "1";
+}
+
+/**
+ * トグル操作後の戻り先。"/products" で始まる内部パスのみ許可し、それ以外は一覧へ。
+ * 外部 URL やプロトコル相対(//)へのオープンリダイレクトを防ぐ。
+ */
+export function safeReturnTo(raw: string | null | undefined): string {
+  if (!raw || !raw.startsWith("/products")) return "/products";
+  if (raw.startsWith("//") || /[\\@]/.test(raw)) return "/products";
+  const rest = raw.slice("/products".length);
+  if (rest !== "" && !/^[/?#]/.test(rest)) return "/products";
+  return raw;
 }
 
 /** "/products" または "/products?q=...&sort=...&order=..." を返す。 */
@@ -40,6 +59,7 @@ export function buildProductsUrl(params: ProductsUrlParams): string {
     query.set("sort", params.sort.sort);
     query.set("order", params.sort.order);
   }
+  if (params.bookmarked) query.set("bookmarked", "1");
   const qs = query.toString();
   return qs === "" ? "/products" : `/products?${qs}`;
 }
