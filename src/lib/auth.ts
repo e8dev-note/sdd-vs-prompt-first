@@ -3,6 +3,7 @@
 import { cache } from "react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { can, type Permission } from "./authz";
 import { getSession, type Session } from "./session";
 import { getUserById, type User } from "./users";
 
@@ -22,6 +23,18 @@ export async function requireUser(returnTo?: string): Promise<User> {
   const user = await getCurrentUser();
   if (!user) {
     redirect(returnTo ? `/login?returnTo=${encodeURIComponent(returnTo)}` : "/login");
+  }
+  return user;
+}
+
+/**
+ * ログイン検査の後に権限を検査する。不許可なら /forbidden へ。
+ * 判定にはセッションから解決した User.role だけを使う(FormData や URL の値は見ない)。
+ */
+export async function requirePermission(permission: Permission, returnTo?: string): Promise<User> {
+  const user = await requireUser(returnTo);
+  if (!can(user.role, permission)) {
+    redirect("/forbidden");
   }
   return user;
 }
