@@ -8,7 +8,7 @@
 - `docs/CLAUDE.md.template` … 常時コンテキストのルールファイル。prompt-first では `CLAUDE.md`、cc-sdd では steering に同内容を入れる。
 - `docs/metrics.md` … 段階ごとの計測表。両トラックで同じ表を埋める。
 - `prompt-first/` … トラックA。段階ごとにコミットし、`prompt-first-stepN` タグを打つ。
-- `cc-sdd/` … トラックB。別セッションで作成。同様に `cc-sdd-stepN` タグを打つ。
+- `cc-sdd/` … トラックB。別セッションで作成し subtree で取り込んだ。`cc-sdd-stepN` タグは取り込み前のコミット(ファイルがルート直下)を指す。仕様書は `cc-sdd/.kiro/specs/`、steering は `cc-sdd/.kiro/steering/`。
 
 リポジトリはこのルート1つ(モノレポ)。prompt-first の step0〜step4 は subtree 取り込み前のコミット(ファイルがルート直下)を指し、step5 以降は `prompt-first/` 配下を指す。段階間の差分は次のように取る。
 
@@ -19,6 +19,10 @@ git diff --stat prompt-first-step1 prompt-first-step2
 git diff --stat prompt-first-step4 prompt-first-step5:prompt-first
 # step5 以降同士
 git diff --stat prompt-first-step5 prompt-first-step6 -- prompt-first
+
+# cc-sdd は全段階が取り込み前(ルート直下)。仕様書を除くなら .kiro を外す
+git diff --shortstat cc-sdd-step1 cc-sdd-step2 -- . ':!package-lock.json' ':!docs'
+git diff --shortstat cc-sdd-step1 cc-sdd-step2 -- . ':!package-lock.json' ':!docs' ':!.kiro'
 ```
 
 ## 手順(各トラック共通)
@@ -44,5 +48,5 @@ git diff --stat prompt-first-step5 prompt-first-step6 -- prompt-first
 ## 進捗
 
 - prompt-first: 2026-09-06 に step0〜step4 完了(`prompt-first/`、タグ `prompt-first-step0`〜`step4`)。
-- cc-sdd: 未着手。別セッションで `cc-sdd/` に作成する。
+- cc-sdd: 2026-09-06〜07 に step0〜step6 完了(`cc-sdd/`、タグ `cc-sdd-step0`〜`step6`)。計測は `docs/metrics.md` の cc-sdd 表。
 - 記事下書きは `docs/article/` に置く(git 管理外)。
