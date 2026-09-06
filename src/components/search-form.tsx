@@ -5,10 +5,12 @@ type Props = {
   keyword: string;
   /** 指定時は hidden で sort / order を引き継ぐ(GET フォームは action のクエリを捨てるため) */
   sort?: SortState;
+  /** true なら hidden で bookmarked=1 を引き継ぐ */
+  bookmarked?: boolean;
 };
 
 /** GET フォーム。送信すると ?q= が URL に付き、サーバ側で絞り込む。JS 不要。 */
-export function SearchForm({ keyword, sort }: Props) {
+export function SearchForm({ keyword, sort, bookmarked = false }: Props) {
   return (
     <form method="get" action="/products" className="flex gap-2" role="search">
       <label htmlFor="q" className="sr-only">
@@ -28,6 +30,7 @@ export function SearchForm({ keyword, sort }: Props) {
           <input type="hidden" name="order" value={sort.order} />
         </>
       )}
+      {bookmarked && <input type="hidden" name="bookmarked" value="1" />}
       <button
         type="submit"
         className="rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
@@ -35,7 +38,7 @@ export function SearchForm({ keyword, sort }: Props) {
         検索
       </button>
       {keyword !== "" && (
-        <Link href={buildProductsUrl({ sort })} className="self-center text-sm text-blue-700 underline">
+        <Link href={buildProductsUrl({ sort, bookmarked })} className="self-center text-sm text-blue-700 underline">
           クリア
         </Link>
       )}

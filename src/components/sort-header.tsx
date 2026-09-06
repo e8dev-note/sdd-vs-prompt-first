@@ -7,13 +7,14 @@ type Props = {
   label: string;
   current: SortState;
   keyword: string;
+  bookmarked?: boolean;
   align?: "left" | "right";
 };
 
 /** クリックで並び替えを切り替える列ヘッダ。リンクなので JS 不要。ソート中の列にだけ印と aria-sort を付ける。 */
-export function SortHeader({ column, label, current, keyword, align = "left" }: Props) {
+export function SortHeader({ column, label, current, keyword, bookmarked = false, align = "left" }: Props) {
   const active = current.sort === column;
-  const href = buildProductsUrl({ keyword, sort: nextSortState(current, column) });
+  const href = buildProductsUrl({ keyword, sort: nextSortState(current, column), bookmarked });
   const ariaSort = active ? (current.order === "asc" ? "ascending" : "descending") : undefined;
   return (
     <th
