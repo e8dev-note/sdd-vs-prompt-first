@@ -1,0 +1,174 @@
+import { beforeEach, afterEach, describe, expect, it } from "vitest";
+import { closeDb, getDb } from "@/lib/db";
+import {
+  countProducts,
+  createProduct,
+  deleteProduct,
+  isSortColumn,
+  isSortOrder,
+  getProduct,
+  listProducts,
+  setBookmark,
+  updateProduct,
+  validateProductUpdate,
+} from "@/lib/products";
+import { SEED_PRODUCTS, seedIfEmpty } from "@/lib/seed";
+
+beforeEach(() => {
+  getDb();
+  seedIfEmpty();
+});
+afterEach(() => closeDb());
+
+describe("migrations / seed", () => {
+  it("creates products table and seeds 20 rows once", () => {
+    expect(countProducts()).toBe(SEED_PRODUCTS.length);
+    expect(seedIfEmpty()).toBe(0);
+    expect(countProducts()).toBe(SEED_PRODUCTS.length);
+  });
+});
+
+describe("listProducts", () => {
+  it("returns all rows ordered by code when keyword is empty", () => {
+    const rows = listProducts("");
+    expect(rows).toHaveLength(SEED_PRODUCTS.length);
+    expect(rows.map((r) => r.code)).toEqual([...rows.map((r) => r.code)].sort());
+  });
+
+  it("matches code, name, or category partially", () => {
+    expect(listProducts("P-001").map((r) => r.code)).toEqual([
+      "P-0010", "P-0011", "P-0012", "P-0013", "P-0014",
+      "P-0015", "P-0016", "P-0017", "P-0018", "P-0019",
+    ]);
+    expect(listProducts("ボールペン")).toHaveLength(2);
+    expect(listProducts("書籍")).toHaveLength(4);
+    expect(listProducts("存在しない")).toHaveLength(0);
+  });
+
+  it("escapes LIKE wildcards", () => {
+    createProduct({ code: "X_1", name: "wild", category: "test", price: 1, note: null });
+    expect(listProducts("_1").map((r) => r.code)).toEqual(["X_1"]);
+    expect(listProducts("%")).toHaveLength(0);
+  });
+});
+
+describe("getProduct / deleteProduct", () => {
+  it("gets by id and returns undefined for missing id", () => {
+    const first = listProducts()[0];
+    expect(getProduct(first.id)?.code).toBe(first.code);
+    expect(getProduct(999999)).toBeUndefined();
+  });
+
+  it("deletes a row and reports whether anything was deleted", () => {
+    const first = listProducts()[0];
+    expect(deleteProduct(first.id)).toBe(true);
+    expect(getProduct(first.id)).toBeUndefined();
+    expect(deleteProduct(first.id)).toBe(false);
+    expect(countProducts()).toBe(SEED_PRODUCTS.length - 1);
+  });
+});
+
+describe("listProducts sorting", () => {
+  it("defaults to code ascending", () => {
+    const codes = listProducts({}).map((r) => r.code);
+    expect(codes).toEqual([...codes].sort());
+  });
+
+  it("sorts by price descending", () => {
+    const prices = listProducts({ sort: "price", order: "desc" }).map((r) => r.price);
+    expect(prices).toEqual([...prices].sort((a, b) => b - a));
+  });
+
+  it("sorts by name ascending and by category descending", () => {
+    const names = listProducts({ sort: "name", order: "asc" }).map((r) => r.name);
+    expect(names).toEqual([...names].sort());
+    const cats = listProducts({ sort: "category", order: "desc" }).map((r) => r.category);
+    expect(cats).toEqual([...cats].sort().reverse());
+  });
+
+  it("combines keyword and sort", () => {
+    const rows = listProducts({ keyword: "書籍", sort: "price", order: "asc" });
+    expect(rows).toHaveLength(4);
+    expect(rows.map((r) => r.price)).toEqual([2400, 2800, 3200, 3600]);
+  });
+
+  it("validates sort column and order", () => {
+    expect(isSortColumn("price")).toBe(true);
+    expect(isSortColumn("id")).toBe(false);
+    expect(isSortColumn("code; DROP TABLE products")).toBe(false);
+    expect(isSortOrder("desc")).toBe(true);
+    expect(isSortOrder("DESC")).toBe(false);
+  });
+});
+
+describe("validateProductUpdate", () => {
+  it("accepts valid input and normalizes note", () => {
+    const r = validateProductUpdate({ name: " A ", category: "C", price: "100", note: "  " });
+    expect(r.errors).toBeUndefined();
+    expect(r.value).toEqual({ name: "A", category: "C", price: 100, note: null });
+  });
+
+  it("rejects empty name/category and non-integer or negative price", () => {
+    const r = validateProductUpdate({ name: "", category: " ", price: "-1", note: null });
+    expect(r.value).toBeUndefined();
+    expect(Object.keys(r.errors!).sort()).toEqual(["category", "name", "price"]);
+    expect(validateProductUpdate({ name: "a", category: "b", price: "1.5" }).errors?.price).toBeDefined();
+    expect(validateProductUpdate({ name: "a", category: "b", price: "abc" }).errors?.price).toBeDefined();
+    expect(validateProductUpdate({ name: "a", category: "b", price: "0" }).errors).toBeUndefined();
+  });
+});
+
+describe("updateProduct", () => {
+  it("updates editable fields, bumps updated_at, and keeps code", async () => {
+    const before = listProducts()[0];
+    await new Promise((r) => setTimeout(r, 5));
+    const after = updateProduct(before.id, {
+      name: "新名称",
+      category: "新分類",
+      price: 999,
+      note: "memo",
+    });
+    expect(after).toMatchObject({
+      id: before.id,
+      code: before.code,
+      name: "新名称",
+      category: "新分類",
+      price: 999,
+      note: "memo",
+      created_at: before.created_at,
+    });
+    expect(after!.updated_at > before.updated_at).toBe(true);
+  });
+
+  it("returns undefined for a missing id", () => {
+    expect(
+      updateProduct(999999, { name: "x", category: "y", price: 1, note: null }),
+    ).toBeUndefined();
+  });
+});
+
+describe("bookmark", () => {
+  it("migration adds bookmarked column defaulting to 0", () => {
+    expect(listProducts().every((r) => r.bookmarked === 0)).toBe(true);
+  });
+
+  it("sets and clears bookmark, and filters bookmarked only", () => {
+    const [a, b, c] = listProducts();
+    expect(setBookmark(a.id, true)?.bookmarked).toBe(1);
+    expect(setBookmark(c.id, true)?.bookmarked).toBe(1);
+    expect(listProducts({ bookmarkedOnly: true }).map((r) => r.id)).toEqual([a.id, c.id]);
+    expect(setBookmark(a.id, false)?.bookmarked).toBe(0);
+    expect(listProducts({ bookmarkedOnly: true }).map((r) => r.id)).toEqual([c.id]);
+    expect(getProduct(b.id)?.bookmarked).toBe(0);
+    expect(setBookmark(999999, true)).toBeUndefined();
+  });
+
+  it("combines bookmarked filter with keyword and sort", () => {
+    const books = listProducts({ keyword: "書籍", sort: "price", order: "desc" });
+    setBookmark(books[0].id, true);
+    setBookmark(books[3].id, true);
+    setBookmark(listProducts({ keyword: "家電" })[0].id, true);
+    const rows = listProducts({ keyword: "書籍", sort: "price", order: "asc", bookmarkedOnly: true });
+    expect(rows.map((r) => r.id)).toEqual([books[3].id, books[0].id]);
+  });
+});
