@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { DeleteButton } from "@/components/delete-button";
 import { getProduct, parseProductId } from "@/lib/products";
 
 type Props = {
@@ -39,6 +40,7 @@ export default async function ProductDetailPage({ params }: Props) {
           </div>
         ))}
       </dl>
+      <DeleteButton id={product.id} />
     </section>
   );
 }
