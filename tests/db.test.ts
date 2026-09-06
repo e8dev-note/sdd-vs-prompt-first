@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { mkdtempSync, rmSync } from "node:fs";
+import Database from "better-sqlite3";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { appliedMigrations, getDb, resetDbForTests } from "@/lib/db";
 
 let dir: string;
@@ -25,14 +26,14 @@ describe("getDb", () => {
       .prepare("SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name")
       .all() as { name: string }[];
     expect(tables.map((t) => t.name)).toContain("products");
-    expect(appliedMigrations(db)).toEqual(["001_create_products.sql"]);
+    expect(appliedMigrations(db)).toEqual(["001_create_products.sql", "002_add_bookmarked_to_products.sql"]);
   });
 
   it("returns the same connection and does not re-apply migrations", () => {
     const first = getDb();
     const second = getDb();
     expect(second).toBe(first);
-    expect(appliedMigrations(second)).toHaveLength(1);
+    expect(appliedMigrations(second)).toHaveLength(2);
   });
 
   it("re-opens an existing database without re-applying migrations", () => {
@@ -42,8 +43,31 @@ describe("getDb", () => {
     ).run("X-1", "x", "c", 1, null, "2026-01-01T00:00:00.000Z", "2026-01-01T00:00:00.000Z");
     resetDbForTests();
     const reopened = getDb();
-    expect(appliedMigrations(reopened)).toHaveLength(1);
+    expect(appliedMigrations(reopened)).toHaveLength(2);
     const row = reopened.prepare("SELECT code FROM products WHERE code = ?").get("X-1") as { code: string };
     expect(row.code).toBe("X-1");
+  });
+});
+
+describe("migration 002 on an existing database", () => {
+  it("adds bookmarked with default 0 to existing rows without touching other columns", () => {
+    // 001 だけを手で適用したデータ入りの DB を作る
+    mkdirSync(dirname(process.env.DATABASE_PATH!), { recursive: true });
+    const raw = new Database(process.env.DATABASE_PATH!);
+    raw.exec("CREATE TABLE schema_migrations (name TEXT PRIMARY KEY, applied_at TEXT NOT NULL)");
+    raw.exec(readFileSync("db/migrations/001_create_products.sql", "utf8"));
+    raw.prepare("INSERT INTO schema_migrations (name, applied_at) VALUES (?, ?)").run("001_create_products.sql", "2026-01-01T00:00:00.000Z");
+    raw.prepare(
+      "INSERT INTO products (code, name, category, price, note, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+    ).run("OLD-1", "old", "c", 5, "n", "2026-01-01T00:00:00.000Z", "2026-01-02T00:00:00.000Z");
+    raw.close();
+
+    const db = getDb();
+    expect(appliedMigrations(db)).toEqual(["001_create_products.sql", "002_add_bookmarked_to_products.sql"]);
+    const row = db.prepare("SELECT * FROM products WHERE code = ?").get("OLD-1") as Record<string, unknown>;
+    expect(row).toMatchObject({
+      code: "OLD-1", name: "old", category: "c", price: 5, note: "n",
+      created_at: "2026-01-01T00:00:00.000Z", updated_at: "2026-01-02T00:00:00.000Z", bookmarked: 0,
+    });
   });
 });
