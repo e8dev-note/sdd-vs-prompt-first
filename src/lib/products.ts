@@ -13,9 +13,21 @@ export interface Product {
   updated_at: string; // ISO8601 UTC
 }
 
+export const SORT_COLUMNS = ["code", "name", "category", "price"] as const;
+export type SortColumn = (typeof SORT_COLUMNS)[number];
+export type SortOrder = "asc" | "desc";
+
+export function isSortColumn(value: string): value is SortColumn {
+  return (SORT_COLUMNS as readonly string[]).includes(value);
+}
+
 export interface ListProductsOptions {
   /** 未指定・空白のみ → 全件 */
   keyword?: string;
+  /** 省略時 "code" */
+  sort?: SortColumn;
+  /** 省略時 "asc" */
+  order?: SortOrder;
 }
 
 const COLUMNS = "id, code, name, category, price, note, created_at, updated_at";
