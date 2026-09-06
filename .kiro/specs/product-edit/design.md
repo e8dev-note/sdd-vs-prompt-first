@@ -244,7 +244,7 @@ export async function updateProductAction(prevState: EditState, formData: FormDa
 - Props: `{ product: Product }`
 - State: `values: { name, category, price: string, note }`(制御)、`useActionState(updateProductAction, { status: "idle" })`
 - `openModal()`: `values` を `product` から初期化 → `dialog.showModal()`
-- `<dialog onClose>`: `values` を `product` に戻す(キャンセル / Esc / 成功後の close で共通)
+- dialog の `close` イベントで `values` を `product` に戻す(キャンセル / Esc / 成功後の close で共通)。React は `<dialog>` の `onClose` を合成イベントとして配信しないため、`useEffect` でネイティブの `addEventListener("close")` を使う(実装時に判明、設計を更新)
 - `useEffect([state])`: `state.status === "success"` かつ `savedAt` が前回と異なれば `dialog.close()`
 - フォーム: hidden `id`、読み取り専用表示の `code`、`name`(`autoFocus`)、`category`、`price`(`type="text" inputMode="numeric"`)、`note`(`textarea`)。各入力の直下に `state.errors[field]` を `aria-describedby` 付きで表示。`formError` はフォーム上部
 - ボタン: 保存(`disabled={pending}`)、キャンセル(`type="button"` → `dialog.close()`)

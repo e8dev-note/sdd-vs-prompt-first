@@ -32,6 +32,16 @@ export function EditProductModal({ product }: Props) {
     }
   }, [state]);
 
+  // React は <dialog> の close イベントを合成イベントとして配信しないため、ネイティブで購読する。
+  // キャンセル / Esc / 保存成功のいずれで閉じても入力状態を保存済みの値に戻す。
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    const reset = () => setValues(toValues(product));
+    dialog.addEventListener("close", reset);
+    return () => dialog.removeEventListener("close", reset);
+  }, [product]);
+
   function openModal() {
     setValues(toValues(product));
     dialogRef.current?.showModal();
@@ -87,7 +97,6 @@ export function EditProductModal({ product }: Props) {
       </button>
       <dialog
         ref={dialogRef}
-        onClose={() => setValues(toValues(product))}
         className="w-full max-w-lg rounded border border-gray-200 bg-white p-0 text-gray-900 shadow-lg backdrop:bg-black/40 open:fixed open:top-1/2 open:left-1/2 open:-translate-x-1/2 open:-translate-y-1/2"
       >
         <form action={formAction} className="space-y-4 p-6">
