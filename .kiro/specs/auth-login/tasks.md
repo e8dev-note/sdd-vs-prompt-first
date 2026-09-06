@@ -45,7 +45,7 @@
   - 完了状態: 誤入力で同一エラー、正しい入力で復帰先へ遷移し Cookie が設定される
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.7, 2.2, 2.3, 5.3, 5.5_
 
-- [ ] 2.3 (P) Proxy で未ログインの `/products` 配下を `/login` へ送る
+- [x] 2.3 (P) Proxy で未ログインの `/products` 配下を `/login` へ送る
   - `/products/:path*` のみ対象。Cookie がなければ元のパスとクエリを復帰先に付けて `/login` へ。あれば素通し(検証はしない)
   - 完了状態: Cookie なしで `/products?q=x` にアクセスすると `/login?returnTo=%2Fproducts%3Fq%3Dx` へ、`/login` と静的アセットは影響なし
   - _Requirements: 2.1, 2.4, 4.1, 4.3_
