@@ -1,16 +1,16 @@
 {
   "feature_name": "authz-roles",
   "created_at": "2026-09-06T22:48:12Z",
-  "updated_at": "2026-09-06T22:48:12Z",
+  "updated_at": "2026-09-06T22:52:35Z",
   "language": "ja",
-  "phase": "requirements-generated",
+  "phase": "design-generated",
   "approvals": {
     "requirements": {
       "generated": true,
-      "approved": false
+      "approved": true
     },
     "design": {
-      "generated": false,
+      "generated": true,
       "approved": false
     },
     "tasks": {
