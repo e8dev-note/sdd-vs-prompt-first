@@ -42,3 +42,6 @@ next-env.d.ts
 /data/*.db
 /data/*.db-wal
 /data/*.db-shm
+
+# 記事下書き(sdd01 と同じく git 管理外)
+/docs/article/
