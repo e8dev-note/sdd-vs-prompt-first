@@ -87,3 +87,45 @@ export function countProducts(): number {
 function escapeLike(s: string): string {
   return s.replace(/[\\%_]/g, (m) => `\\${m}`);
 }
+
+export type ProductUpdate = Pick<Product, "name" | "category" | "price" | "note">;
+export type FieldErrors = Partial<Record<keyof ProductUpdate, string>>;
+
+/**
+ * フォーム入力(文字列)を検証して更新値に変換する。
+ * 成功時は { value }、失敗時は { errors } を返す。
+ */
+export function validateProductUpdate(raw: {
+  name?: unknown;
+  category?: unknown;
+  price?: unknown;
+  note?: unknown;
+}): { value: ProductUpdate; errors?: undefined } | { value?: undefined; errors: FieldErrors } {
+  const errors: FieldErrors = {};
+  const name = typeof raw.name === "string" ? raw.name.trim() : "";
+  const category = typeof raw.category === "string" ? raw.category.trim() : "";
+  const priceStr = typeof raw.price === "string" ? raw.price.trim() : String(raw.price ?? "");
+  const noteRaw = typeof raw.note === "string" ? raw.note.trim() : "";
+
+  if (name === "") errors.name = "name は必須です";
+  if (category === "") errors.category = "category は必須です";
+  if (!/^\d+$/.test(priceStr)) {
+    errors.price = "price は 0 以上の整数で入力してください";
+  }
+  if (Object.keys(errors).length > 0) return { errors };
+  return {
+    value: { name, category, price: Number(priceStr), note: noteRaw === "" ? null : noteRaw },
+  };
+}
+
+/** name, category, price, note を更新する。code は変更しない。存在しなければ undefined。 */
+export function updateProduct(id: number, update: ProductUpdate): Product | undefined {
+  const result = getDb()
+    .prepare(
+      `UPDATE products
+       SET name = @name, category = @category, price = @price, note = @note, updated_at = @now
+       WHERE id = @id`,
+    )
+    .run({ ...update, id, now: new Date().toISOString() });
+  return result.changes > 0 ? getProduct(id) : undefined;
+}

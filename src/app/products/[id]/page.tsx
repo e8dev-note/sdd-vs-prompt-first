@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { bootstrap } from "@/lib/bootstrap";
 import { getProduct } from "@/lib/products";
 import { DeleteButton } from "@/components/delete-button";
+import { EditProductModal } from "@/components/edit-product-modal";
 import { deleteProductAction } from "../actions";
 
 export const dynamic = "force-dynamic";
@@ -43,10 +44,13 @@ export default async function ProductDetailPage(props: PageProps<"/products/[id]
           ))}
         </tbody>
       </table>
-      <form action={deleteProductAction} className="mt-6">
-        <input type="hidden" name="id" value={product.id} />
-        <DeleteButton />
-      </form>
+      <div className="mt-6 flex items-center gap-3">
+        <EditProductModal product={product} />
+        <form action={deleteProductAction}>
+          <input type="hidden" name="id" value={product.id} />
+          <DeleteButton />
+        </form>
+      </div>
     </main>
   );
 }

@@ -8,6 +8,8 @@ import {
   isSortOrder,
   getProduct,
   listProducts,
+  updateProduct,
+  validateProductUpdate,
 } from "@/lib/products";
 import { SEED_PRODUCTS, seedIfEmpty } from "@/lib/seed";
 
@@ -95,5 +97,51 @@ describe("listProducts sorting", () => {
     expect(isSortColumn("code; DROP TABLE products")).toBe(false);
     expect(isSortOrder("desc")).toBe(true);
     expect(isSortOrder("DESC")).toBe(false);
+  });
+});
+
+describe("validateProductUpdate", () => {
+  it("accepts valid input and normalizes note", () => {
+    const r = validateProductUpdate({ name: " A ", category: "C", price: "100", note: "  " });
+    expect(r.errors).toBeUndefined();
+    expect(r.value).toEqual({ name: "A", category: "C", price: 100, note: null });
+  });
+
+  it("rejects empty name/category and non-integer or negative price", () => {
+    const r = validateProductUpdate({ name: "", category: " ", price: "-1", note: null });
+    expect(r.value).toBeUndefined();
+    expect(Object.keys(r.errors!).sort()).toEqual(["category", "name", "price"]);
+    expect(validateProductUpdate({ name: "a", category: "b", price: "1.5" }).errors?.price).toBeDefined();
+    expect(validateProductUpdate({ name: "a", category: "b", price: "abc" }).errors?.price).toBeDefined();
+    expect(validateProductUpdate({ name: "a", category: "b", price: "0" }).errors).toBeUndefined();
+  });
+});
+
+describe("updateProduct", () => {
+  it("updates editable fields, bumps updated_at, and keeps code", async () => {
+    const before = listProducts()[0];
+    await new Promise((r) => setTimeout(r, 5));
+    const after = updateProduct(before.id, {
+      name: "新名称",
+      category: "新分類",
+      price: 999,
+      note: "memo",
+    });
+    expect(after).toMatchObject({
+      id: before.id,
+      code: before.code,
+      name: "新名称",
+      category: "新分類",
+      price: 999,
+      note: "memo",
+      created_at: before.created_at,
+    });
+    expect(after!.updated_at > before.updated_at).toBe(true);
+  });
+
+  it("returns undefined for a missing id", () => {
+    expect(
+      updateProduct(999999, { name: "x", category: "y", price: 1, note: null }),
+    ).toBeUndefined();
   });
 });
