@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { BookmarkToggle } from "@/components/bookmark-toggle";
 import { DeleteButton } from "@/components/delete-button";
 import { EditProductModal } from "@/components/edit-product-modal";
 import { getProduct, parseProductId } from "@/lib/products";
@@ -21,6 +22,7 @@ export default async function ProductDetailPage({ params }: Props) {
     ["category", product.category],
     ["price", product.price],
     ["note", product.note ?? ""],
+    ["bookmarked", product.bookmarked ? "ブックマーク中" : "-"],
     ["created_at", product.created_at],
     ["updated_at", product.updated_at],
   ];
@@ -41,9 +43,10 @@ export default async function ProductDetailPage({ params }: Props) {
           </div>
         ))}
       </dl>
-      <div className="flex gap-2">
+      <div className="flex items-center gap-2">
         <EditProductModal product={product} />
         <DeleteButton id={product.id} />
+        <BookmarkToggle id={product.id} bookmarked={product.bookmarked} returnTo={`/products/${product.id}`} label />
       </div>
     </section>
   );
