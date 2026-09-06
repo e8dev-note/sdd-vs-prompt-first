@@ -1,6 +1,7 @@
 import Database from "better-sqlite3";
 import { mkdirSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
+import { seedIfEmpty } from "./seed";
 
 const DEFAULT_DB_PATH = "data/app.db";
 const MIGRATIONS_DIR = "db/migrations";
@@ -48,6 +49,8 @@ function open(): Database.Database {
   const db = new Database(path);
   db.pragma("foreign_keys = ON");
   applyMigrations(db);
+  const seeded = seedIfEmpty(db);
+  if (seeded > 0) console.info(`[db] seeded ${seeded} products`);
   return db;
 }
 
