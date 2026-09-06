@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { DeleteButton } from "@/components/delete-button";
+import { EditProductModal } from "@/components/edit-product-modal";
 import { getProduct, parseProductId } from "@/lib/products";
 
 type Props = {
@@ -40,7 +41,10 @@ export default async function ProductDetailPage({ params }: Props) {
           </div>
         ))}
       </dl>
-      <DeleteButton id={product.id} />
+      <div className="flex gap-2">
+        <EditProductModal product={product} />
+        <DeleteButton id={product.id} />
+      </div>
     </section>
   );
 }
