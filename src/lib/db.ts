@@ -11,7 +11,8 @@ type DbGlobal = typeof globalThis & { __productMasterDb?: Database.Database };
 const store = globalThis as DbGlobal;
 
 function dbPath(): string {
-  return resolve(process.cwd(), process.env.DATABASE_PATH ?? DEFAULT_DB_PATH);
+  // 実行時に決まるパスなので Turbopack のファイルトレース対象から外す
+  return resolve(/*turbopackIgnore: true*/ process.cwd(), process.env.DATABASE_PATH ?? DEFAULT_DB_PATH);
 }
 
 /** 適用済み migration 名(昇順)。 */
@@ -27,7 +28,7 @@ function applyMigrations(db: Database.Database): void {
     "CREATE TABLE IF NOT EXISTS schema_migrations (name TEXT PRIMARY KEY, applied_at TEXT NOT NULL)",
   );
   const applied = new Set(appliedMigrations(db));
-  const dir = resolve(process.cwd(), MIGRATIONS_DIR);
+  const dir = resolve(/*turbopackIgnore: true*/ process.cwd(), MIGRATIONS_DIR);
   const files = readdirSync(dir)
     .filter((f) => f.endsWith(".sql"))
     .sort();

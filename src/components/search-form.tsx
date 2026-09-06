@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 type Props = { keyword: string };
 
 /** GET フォーム。送信すると ?q= が URL に付き、サーバ側で絞り込む。JS 不要。 */
@@ -22,9 +24,9 @@ export function SearchForm({ keyword }: Props) {
         検索
       </button>
       {keyword !== "" && (
-        <a href="/products" className="self-center text-sm text-blue-700 underline">
+        <Link href="/products" className="self-center text-sm text-blue-700 underline">
           クリア
-        </a>
+        </Link>
       )}
     </form>
   );
