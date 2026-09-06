@@ -8,6 +8,7 @@ import {
   isSortOrder,
   getProduct,
   listProducts,
+  setBookmark,
   updateProduct,
   validateProductUpdate,
 } from "@/lib/products";
@@ -143,5 +144,31 @@ describe("updateProduct", () => {
     expect(
       updateProduct(999999, { name: "x", category: "y", price: 1, note: null }),
     ).toBeUndefined();
+  });
+});
+
+describe("bookmark", () => {
+  it("migration adds bookmarked column defaulting to 0", () => {
+    expect(listProducts().every((r) => r.bookmarked === 0)).toBe(true);
+  });
+
+  it("sets and clears bookmark, and filters bookmarked only", () => {
+    const [a, b, c] = listProducts();
+    expect(setBookmark(a.id, true)?.bookmarked).toBe(1);
+    expect(setBookmark(c.id, true)?.bookmarked).toBe(1);
+    expect(listProducts({ bookmarkedOnly: true }).map((r) => r.id)).toEqual([a.id, c.id]);
+    expect(setBookmark(a.id, false)?.bookmarked).toBe(0);
+    expect(listProducts({ bookmarkedOnly: true }).map((r) => r.id)).toEqual([c.id]);
+    expect(getProduct(b.id)?.bookmarked).toBe(0);
+    expect(setBookmark(999999, true)).toBeUndefined();
+  });
+
+  it("combines bookmarked filter with keyword and sort", () => {
+    const books = listProducts({ keyword: "書籍", sort: "price", order: "desc" });
+    setBookmark(books[0].id, true);
+    setBookmark(books[3].id, true);
+    setBookmark(listProducts({ keyword: "家電" })[0].id, true);
+    const rows = listProducts({ keyword: "書籍", sort: "price", order: "asc", bookmarkedOnly: true });
+    expect(rows.map((r) => r.id)).toEqual([books[3].id, books[0].id]);
   });
 });

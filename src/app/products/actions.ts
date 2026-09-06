@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import {
   deleteProduct,
+  setBookmark,
   updateProduct,
   validateProductUpdate,
   type FieldErrors,
@@ -49,4 +50,14 @@ export async function updateProductAction(
   revalidatePath("/products");
   revalidatePath(`/products/${id}`);
   return { status: "success", version: prev.version + 1 };
+}
+
+/** ブックマークをトグルする。呼び出し元の画面に留まる(revalidate のみ)。 */
+export async function toggleBookmarkAction(formData: FormData): Promise<void> {
+  const id = Number(formData.get("id"));
+  if (!Number.isInteger(id)) throw new Error("invalid id");
+  const on = formData.get("on") === "1";
+  setBookmark(id, on);
+  revalidatePath("/products");
+  revalidatePath(`/products/${id}`);
 }

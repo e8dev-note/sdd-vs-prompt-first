@@ -2,11 +2,13 @@ import Link from "next/link";
 
 type Props = {
   initialQuery: string;
+  /** 「ブックマークのみ表示」の初期状態。 */
+  bookmarkedOnly: boolean;
   /** 検索時に維持する追加クエリ(sort, order など)。 */
   preserved?: Record<string, string>;
 };
 
-export function SearchForm({ initialQuery, preserved = {} }: Props) {
+export function SearchForm({ initialQuery, bookmarkedOnly, preserved = {} }: Props) {
   const clearParams = new URLSearchParams(preserved).toString();
   return (
     <form action="/products" method="get" className="mb-4 flex items-center gap-2">
@@ -27,7 +29,11 @@ export function SearchForm({ initialQuery, preserved = {} }: Props) {
       >
         検索
       </button>
-      {initialQuery !== "" && (
+      <label className="ml-2 flex items-center gap-1 text-sm whitespace-nowrap">
+        <input type="checkbox" name="bookmarked" value="1" defaultChecked={bookmarkedOnly} />
+        ブックマークのみ表示
+      </label>
+      {(initialQuery !== "" || bookmarkedOnly) && (
         <Link href={clearParams ? `/products?${clearParams}` : "/products"} className="text-sm text-zinc-600 underline">
           クリア
         </Link>

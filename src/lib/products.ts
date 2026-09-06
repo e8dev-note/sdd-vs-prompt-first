@@ -7,11 +7,13 @@ export type Product = {
   category: string;
   price: number;
   note: string | null;
+  /** 0 = 未ブックマーク, 1 = ブックマーク中 */
+  bookmarked: 0 | 1;
   created_at: string;
   updated_at: string;
 };
 
-export type ProductInput = Omit<Product, "id" | "created_at" | "updated_at">;
+export type ProductInput = Omit<Product, "id" | "bookmarked" | "created_at" | "updated_at">;
 
 export const SORT_COLUMNS = ["code", "name", "category", "price"] as const;
 export type SortColumn = (typeof SORT_COLUMNS)[number];
@@ -23,6 +25,8 @@ export type ListOptions = {
   keyword?: string;
   sort?: SortColumn;
   order?: SortOrder;
+  /** true ならブックマーク中の商品だけを返す。 */
+  bookmarkedOnly?: boolean;
 };
 
 export function isSortColumn(v: unknown): v is SortColumn {
@@ -40,20 +44,20 @@ export function listProducts(options: ListOptions | string = {}): Product[] {
   const order = opts.order ?? DEFAULT_ORDER;
   // sort/order はホワイトリスト検証済みの値だけを埋め込む(SQL インジェクション防止)。
   const orderBy = `ORDER BY ${sort} ${order === "desc" ? "DESC" : "ASC"}, id ASC`;
-  const db = getDb();
-  if (q === "") {
-    return db.prepare(`SELECT * FROM products ${orderBy}`).all() as Product[];
+  const where: string[] = [];
+  const params: unknown[] = [];
+  if (q !== "") {
+    const like = `%${escapeLike(q)}%`;
+    where.push(
+      `(code LIKE ? ESCAPE '\\' OR name LIKE ? ESCAPE '\\' OR category LIKE ? ESCAPE '\\')`,
+    );
+    params.push(like, like, like);
   }
-  const like = `%${escapeLike(q)}%`;
-  return db
-    .prepare(
-      `SELECT * FROM products
-       WHERE code LIKE ? ESCAPE '\\'
-          OR name LIKE ? ESCAPE '\\'
-          OR category LIKE ? ESCAPE '\\'
-       ${orderBy}`,
-    )
-    .all(like, like, like) as Product[];
+  if (opts.bookmarkedOnly) where.push("bookmarked = 1");
+  const whereSql = where.length > 0 ? `WHERE ${where.join(" AND ")}` : "";
+  return getDb()
+    .prepare(`SELECT * FROM products ${whereSql} ${orderBy}`)
+    .all(...params) as Product[];
 }
 
 export function getProduct(id: number): Product | undefined {
@@ -127,5 +131,13 @@ export function updateProduct(id: number, update: ProductUpdate): Product | unde
        WHERE id = @id`,
     )
     .run({ ...update, id, now: new Date().toISOString() });
+  return result.changes > 0 ? getProduct(id) : undefined;
+}
+
+/** ブックマークの ON/OFF を設定する。更新後の行を返す。存在しなければ undefined。 */
+export function setBookmark(id: number, on: boolean): Product | undefined {
+  const result = getDb()
+    .prepare("UPDATE products SET bookmarked = ? WHERE id = ?")
+    .run(on ? 1 : 0, id);
   return result.changes > 0 ? getProduct(id) : undefined;
 }

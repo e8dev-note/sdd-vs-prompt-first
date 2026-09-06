@@ -6,16 +6,16 @@ type Props = {
   label: string;
   currentSort: SortColumn;
   currentOrder: SortOrder;
-  keyword: string;
+  /** 並び替えリンクに引き継ぐクエリ(q, bookmarked など)。 */
+  preserved: Record<string, string>;
   align?: "left" | "right";
 };
 
-/** クリックで並び替えを切り替える列ヘッダ。検索条件(q)は維持する。 */
-export function SortHeader({ column, label, currentSort, currentOrder, keyword, align = "left" }: Props) {
+/** クリックで並び替えを切り替える列ヘッダ。検索・フィルタ条件は維持する。 */
+export function SortHeader({ column, label, currentSort, currentOrder, preserved, align = "left" }: Props) {
   const active = column === currentSort;
   const nextOrder: SortOrder = active && currentOrder === "asc" ? "desc" : "asc";
-  const params = new URLSearchParams();
-  if (keyword !== "") params.set("q", keyword);
+  const params = new URLSearchParams(preserved);
   params.set("sort", column);
   params.set("order", nextOrder);
   const indicator = active ? (currentOrder === "asc" ? "▲" : "▼") : "";

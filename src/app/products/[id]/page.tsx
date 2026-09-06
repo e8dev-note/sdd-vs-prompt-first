@@ -4,6 +4,7 @@ import { bootstrap } from "@/lib/bootstrap";
 import { getProduct } from "@/lib/products";
 import { DeleteButton } from "@/components/delete-button";
 import { EditProductModal } from "@/components/edit-product-modal";
+import { BookmarkToggle } from "@/components/bookmark-toggle";
 import { deleteProductAction } from "../actions";
 
 export const dynamic = "force-dynamic";
@@ -22,6 +23,7 @@ export default async function ProductDetailPage(props: PageProps<"/products/[id]
     ["category", product.category],
     ["price", product.price.toLocaleString()],
     ["note", product.note ?? ""],
+    ["bookmarked", product.bookmarked ? "ブックマーク中" : "なし"],
     ["created_at", product.created_at],
     ["updated_at", product.updated_at],
   ];
@@ -33,7 +35,10 @@ export default async function ProductDetailPage(props: PageProps<"/products/[id]
           ← 一覧に戻る
         </Link>
       </p>
-      <h1 className="mb-4 text-2xl font-semibold">商品詳細</h1>
+      <div className="mb-4 flex items-center gap-3">
+        <h1 className="text-2xl font-semibold">商品詳細</h1>
+        <BookmarkToggle id={product.id} bookmarked={product.bookmarked === 1} withLabel />
+      </div>
       <table className="w-full border-collapse text-sm">
         <tbody>
           {rows.map(([k, v]) => (
