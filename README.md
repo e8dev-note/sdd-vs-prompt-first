@@ -1,36 +1,45 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 商品マスタ管理(cc-sdd トラック)
 
-## Getting Started
+商品マスタ(products)をローカルで閲覧・管理する Web アプリです。Next.js(App Router)+ SQLite(better-sqlite3)で動き、外部サービスには接続しません。
 
-First, run the development server:
+仕様は `.kiro/specs/` 配下(requirements / design / tasks)、プロジェクト共通ルールは `.kiro/steering/` にあります。
+
+## 動作環境
+
+- Node.js 20 以上(検証は Node.js 25 で実施)
+- npm
+
+## 起動手順
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+ブラウザで http://localhost:3000 を開くと商品一覧(`/products`)に移動します。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+初回起動時に `data/app.db` が作成され、`db/migrations/` の SQL が順に適用されたあと、商品が 0 件なら初期データ 20 件が投入されます。DB を初期化したい場合は `data/app.db` を削除して再起動してください。
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 機能
 
-## Learn More
+- 商品一覧 `/products`: code / name / category / price を表形式で表示(code 昇順)
+- キーワード検索: 一覧上部の検索ボックス。code / name / category の部分一致。条件は `?q=` に反映され、リロードしても保持されます
+- 商品詳細 `/products/[id]`: 全列を表示。存在しない id は 404
+- 削除: 詳細画面の「削除」ボタン。確認ダイアログの後に削除し、一覧へ戻ります
 
-To learn more about Next.js, take a look at the following resources:
+## 検証コマンド
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm run build   # 本番ビルド
+npm run lint    # ESLint
+npm test        # Vitest(tests/ 配下。一時ディレクトリの DB を使うため data/app.db は変更しません)
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## ディレクトリ
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `src/app/` … 画面と Server Action
+- `src/components/` … UI 部品
+- `src/lib/` … DB 接続、マイグレーション適用、シード、商品データアクセス
+- `db/migrations/` … スキーマ変更の SQL(連番、追記のみ)
+- `data/` … SQLite ファイル(git 管理外)
+- `tests/` … Vitest のテスト
