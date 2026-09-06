@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { requireUser } from "@/lib/session";
 import { revalidatePath } from "next/cache";
 import {
   deleteProduct,
@@ -11,6 +12,7 @@ import {
 } from "@/lib/products";
 
 export async function deleteProductAction(formData: FormData): Promise<void> {
+  await requireUser();
   const id = Number(formData.get("id"));
   if (!Number.isInteger(id)) throw new Error("invalid id");
   deleteProduct(id);
@@ -30,6 +32,7 @@ export async function updateProductAction(
   prev: UpdateState,
   formData: FormData,
 ): Promise<UpdateState> {
+  await requireUser();
   const id = Number(formData.get("id"));
   if (!Number.isInteger(id)) {
     return { status: "error", message: "invalid id", version: prev.version };
@@ -54,6 +57,7 @@ export async function updateProductAction(
 
 /** ブックマークをトグルする。呼び出し元の画面に留まる(revalidate のみ)。 */
 export async function toggleBookmarkAction(formData: FormData): Promise<void> {
+  await requireUser();
   const id = Number(formData.get("id"));
   if (!Number.isInteger(id)) throw new Error("invalid id");
   const on = formData.get("on") === "1";

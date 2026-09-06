@@ -23,6 +23,20 @@ http://localhost:3000 を開くと `/products` にリダイレクトします。
 - 編集 … 詳細画面の「編集」ボタンでモーダルを開き、name / category / price / note を編集。code は変更不可。バリデーションエラーはフィールド直下に表示
 - ブックマーク … 一覧の各行と詳細画面の ★ でトグル。SQLite に保存。一覧の「ブックマークのみ表示」で絞り込み(`?bookmarked=1`)
 
+## ログイン
+
+`/products` 配下はログインが必要です。未ログインでアクセスすると `/login` にリダイレクトされ、ログイン後に元の画面へ戻ります。セッションは HttpOnly Cookie で 24 時間有効です。
+
+初期ユーザー:
+
+| username | password |
+|---|---|
+| admin | admin1234 |
+| editor | editor1234 |
+| viewer | viewer1234 |
+
+パスワードは scrypt(node:crypto)でハッシュ化して保存しています。
+
 ## 検証コマンド
 
 ```bash

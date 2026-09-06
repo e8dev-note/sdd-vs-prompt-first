@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { bootstrap } from "@/lib/bootstrap";
+import { requireUser } from "@/lib/session";
 import { getProduct } from "@/lib/products";
 import { DeleteButton } from "@/components/delete-button";
 import { EditProductModal } from "@/components/edit-product-modal";
@@ -10,8 +10,8 @@ import { deleteProductAction } from "../actions";
 export const dynamic = "force-dynamic";
 
 export default async function ProductDetailPage(props: PageProps<"/products/[id]">) {
-  bootstrap();
   const { id: rawId } = await props.params;
+  await requireUser(`/products/${rawId}`);
   const id = Number(rawId);
   const product = Number.isInteger(id) ? getProduct(id) : undefined;
   if (!product) notFound();

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { AppHeader } from "@/components/app-header";
 
 export const metadata: Metadata = {
   title: "商品マスタ管理",
@@ -9,7 +10,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="ja" className="h-full antialiased">
-      <body className="min-h-full flex flex-col bg-white text-zinc-900">{children}</body>
+      <body className="min-h-full flex flex-col bg-white text-zinc-900">
+        <AppHeader />
+        {children}
+      </body>
     </html>
   );
 }

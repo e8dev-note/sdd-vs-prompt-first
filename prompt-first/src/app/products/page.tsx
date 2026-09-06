@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { bootstrap } from "@/lib/bootstrap";
+import { requireUser } from "@/lib/session";
 import {
   DEFAULT_ORDER,
   DEFAULT_SORT,
@@ -14,7 +14,7 @@ import { BookmarkToggle } from "@/components/bookmark-toggle";
 export const dynamic = "force-dynamic";
 
 export default async function ProductsPage(props: PageProps<"/products">) {
-  bootstrap();
+  await requireUser("/products");
   const sp = await props.searchParams;
   const q = typeof sp.q === "string" ? sp.q : "";
   const sort = isSortColumn(sp.sort) ? sp.sort : DEFAULT_SORT;
