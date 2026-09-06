@@ -1,7 +1,7 @@
 # Implementation Plan
 
 - [ ] 1. 基盤: スキーマと純粋ロジック
-- [ ] 1.1 users / sessions のマイグレーションを追加する
+- [x] 1.1 users / sessions のマイグレーションを追加する
   - 連番 003 として users(username 一意、パスワード検証情報、作成時刻)と sessions(ID、ユーザー参照 ON DELETE CASCADE、作成・期限時刻)を作る。既存ファイルは編集しない
   - 既存の migration テストの期待値を 3 件に更新する
   - 完了状態: テストが通り、既存 DB を開くと 003 が適用され products は不変
